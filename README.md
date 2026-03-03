@@ -3,62 +3,56 @@
 Interfaz de Usuario del Sistema rematePOS
 
 📖 Descripción
+RematePos-Frontend es el repositorio encargado de la creación y diseño de la interfaz de usuario (UI) para el sistema rematePOS, una plataforma de punto de venta distribuido, orientada a cacharrerías y locales de remates. Este componente permite que los usuarios interactúen de manera intuitiva y eficiente con el sistema, gestionando inventarios, ventas y facturación electrónica en tiempo real.
 
-RematePos-Frontend es el repositorio encargado de la creación y diseño de la interfaz de usuario (UI) para el sistema rematePOS, una plataforma de punto de venta distribuido, orientada a cacharrerías y locales de remates.
-
-Este componente permite que los usuarios interactúen de manera intuitiva y eficiente con el sistema, gestionando inventarios, ventas, y facturación electrónica en tiempo real. El frontend está desarrollado con tecnologías modernas, asegurando una experiencia de usuario fluida, accesible y escalable.
+El frontend está desarrollado con Angular, asegurando una experiencia de usuario fluida, accesible y escalable, interactuando con los microservicios backend a través de JWT para la autenticación.
 
 🏗️ Arquitectura y Diseño
-
 El frontend está basado en una arquitectura moderna, modular y reutilizable, pensada para facilitar su mantenimiento y expansión. Utiliza:
 
-🌐 Vue.js: Framework progresivo para interfaces interactivas y dinámicas.
+Angular: Framework para la creación de interfaces dinámicas y reactivas.
 
-⚡ Vuex: Para manejo de estado global y consistencia entre vistas.
+PostgreSQL y MongoDB: Bases de datos para la gestión de datos y persistencia.
 
-📦 Vuetify: Componentes UI de diseño limpio y profesional con Material Design.
+Docker: Contenerización para asegurar la portabilidad y facilidad de despliegue.
 
-🔄 Axios: Cliente HTTP para interactuar con los microservicios del backend.
-
-📱 Responsive Design: Interfaz optimizada para trabajar tanto en dispositivos de escritorio como en pantallas móviles.
+GitHub: Gestión de código fuente y control de versiones del proyecto.
 
 📦 Funcionalidades
 
 Las principales funcionalidades del frontend incluyen:
 
-🧾 Gestión de Inventarios: Visualización, actualización y seguimiento de productos disponibles.
+Gestión de Inventarios: Visualización, actualización y seguimiento de productos.
 
-💳 Registro de Ventas: Creación y seguimiento de transacciones de venta con soporte a múltiples formas de pago.
+Registro de Ventas: Creación y seguimiento de transacciones con soporte para pagos múltiples.
 
-🔄 Interfaz de Facturación Electrónica: Integración para la generación y envío de facturas electrónicas conforme a la normativa colombiana (DIAN).
+Interfaz de Facturación Electrónica: Generación y envío de facturas electrónicas según la normativa colombiana (DIAN).
 
-🧑‍💻 Gestión de Usuarios: Administración de roles y permisos de acceso a la plataforma.
+Gestión de Usuarios: Administración de roles y permisos.
 
-📊 Reportes e Informes: Generación de informes visuales sobre el rendimiento de ventas e inventarios.
+Reportes e Informes: Generación de informes visuales sobre ventas e inventarios.
 
 🔄 Integración con el Ecosistema rematePOS
 
 RematePos-Frontend se conecta directamente con los siguientes servicios del sistema:
 
-⚙️ API: Consumo de microservicios que gestionan la lógica de negocio y la persistencia de datos.
+API Gateway: Consumo de microservicios para la lógica de negocio y persistencia de datos.
 
-🗄️ Base de Datos: Conexión a la base de datos para la visualización y manipulación de inventarios y ventas.
+Base de Datos: Conexión para la visualización y manipulación de inventarios y ventas.
 
-🧾 Módulo de Facturación Electrónica: Integración con proveedores tecnológicos autorizados por la DIAN.
+Módulo de Facturación Electrónica: Integración con proveedores tecnológicos autorizados por la DIAN.
 
 🚀 Proyección
 
-El frontend está diseñado para escalar y adaptarse a las futuras necesidades comerciales del sistema rematePOS, permitiendo una rápida expansión hacia múltiples locales, proveedores y plataformas.
+El frontend está diseñado para escalar, permitiendo la expansión hacia múltiples locales y plataformas. En el futuro, se planea incorporar:
 
-Se proyecta que la interfaz evolucione con funcionalidades avanzadas como:
+Soporte para múltiples idiomas.
 
-Soporte para múltiples idiomas
+Optimización para otros dispositivos (tabletas, kioscos).
 
-Optimización para otros dispositivos (tabletas, kioscos)
+Integración con sistemas de pago en línea.
 
-Integración con sistemas de pago en línea
-
-Mejoras en la accesibilidad y experiencia de usuario
+Mejoras en la accesibilidad y experiencia de usuario.
 
 👥 Equipo de Desarrollo
 
@@ -71,5 +65,4 @@ Frontend: Andrés Felipe Ardila Fajardo
 QA: Juan Sebastián Murcia Vargas
 
 📌 Estado del Proyecto
-
 🚧 En desarrollo — Proyecto académico para la asignatura Sistemas Distribuidos, con proyección a convertirse en una solución comercial a nivel de pequeñas y medianas empresas.
