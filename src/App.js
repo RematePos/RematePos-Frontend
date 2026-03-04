@@ -35,12 +35,6 @@ export default function App() {
           <p>Sistema de inventario y facturación</p>
         </header>
 
-        {/* Botón para agregar un producto */}
-        <div className="add-product-btn-container">
-          <Link to="/nuevo-producto">
-            <button className="btn btn-success">Agregar Producto</button>
-          </Link>
-        </div>
 
         {/* Lista de productos y rutas */}
         <Routes>

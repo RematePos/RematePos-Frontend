@@ -27,6 +27,7 @@ const ProductsPage = () => {
     },
   ]);
 
+
   // Función para eliminar un producto (simulada)
   const handleDeleteProduct = (productId) => {
     setProducts(products.filter(product => product.id !== productId));
@@ -36,6 +37,12 @@ const ProductsPage = () => {
   return (
     <div>
       <h1>Lista de Productos</h1>
+              {/* Botón para agregar un producto */}
+        <div className="add-product-btn-container">
+          <Link to="/nuevo-producto">
+            <button className="btn btn-success">Agregar Producto</button>
+          </Link>
+        </div>
       <div className="products-list">
         {products.length > 0 ? (
           products.map((product) => (
