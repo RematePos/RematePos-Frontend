@@ -1,15 +1,13 @@
+import React from "react";
 import "./App.css";
-import "./app/styles/styles.css";
 import AppRouter from "./app/routes/AppRouter";
-import AppHeader from "./app/shared/components/AppHeader";
+import AppHeader from "./shared/components/AppHeader";
 
 function App() {
   return (
-    <div className="App">
+    <div className="app-container">
       <AppHeader />
-      <main className="app-main">
-        <AppRouter />
-      </main>
+      <AppRouter />
     </div>
   );
 }
