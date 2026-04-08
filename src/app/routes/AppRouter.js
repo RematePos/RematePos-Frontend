@@ -1,11 +1,11 @@
 import React from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
-
 import InventoryPage from "../features/inventory/pages/InventoryPage";
 import NewProductPage from "../features/products/pages/NewProductPage";
 import LoginPage from "../features/auth/pages/LoginPage";
 import SalesPage from "../features/sales/pages/SalesPage";
-
+import AccountSettingsPage from "../features/account/pages/AccountSettingsPage";
+import ElectronicBillingIntegrationPage from "../features/billing/pages/ElectronicBillingIntegrationPage";
 
 const Layout = () => {
   return (
@@ -25,6 +25,14 @@ const Layout = () => {
           <NavLink to="/inventory" style={linkStyle}>
             Inventario
           </NavLink>
+
+          <NavLink to="/account" style={linkStyle}>
+            Cuenta
+          </NavLink>
+
+          <NavLink to="/billing" style={linkStyle}>
+            Facturación
+          </NavLink>
         </nav>
       </header>
 
@@ -38,6 +46,9 @@ const Layout = () => {
 
         <Route path="/products" element={<Navigate to="/inventory" />} />
         <Route path="/products/new" element={<Navigate to="/inventory/new" />} />
+
+        <Route path="/billing" element={<ElectronicBillingIntegrationPage />} />
+        <Route path="/account" element={<AccountSettingsPage />} />
       </Routes>
     </>
   );
@@ -67,6 +78,7 @@ const brandStyle = {
 const navStyle = {
   display: "flex",
   gap: "16px",
+  flexWrap: "wrap",
 };
 
 const linkStyle = ({ isActive }) => ({
