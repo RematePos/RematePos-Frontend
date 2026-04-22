@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../services/AuthService";
+import { registerUser } from "../services/AuthService";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
+    fullName: "",
+    email: "",
     username: "",
     password: "",
+    confirmPassword: "",
   });
 
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -20,16 +24,55 @@ export default function LoginPage() {
     }));
   };
 
+  const validateForm = () => {
+    if (
+      !form.fullName.trim() ||
+      !form.email.trim() ||
+      !form.username.trim() ||
+      !form.password.trim() ||
+      !form.confirmPassword.trim()
+    ) {
+      setError("Todos los campos son obligatorios.");
+      return false;
+    }
+
+    if (form.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return false;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("La contraseña y la confirmación no coinciden.");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
     setError("");
+
+    if (!validateForm()) return;
+
     setLoading(true);
 
     try {
-      await login(form);
-      navigate("/", { replace: true });
+      await registerUser({
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        username: form.username.trim(),
+        password: form.password.trim(),
+      });
+
+      setMessage("Registro exitoso. Ahora puedes iniciar sesión.");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1200);
     } catch (err) {
-      setError(err.message || "No fue posible iniciar sesión.");
+      setError(err.message || "No fue posible completar el registro.");
     } finally {
       setLoading(false);
     }
@@ -40,37 +83,60 @@ export default function LoginPage() {
       <div style={styles.container}>
         <div style={styles.leftPanel}>
           <div style={styles.brandBadge}>rematePOS</div>
-          <h1 style={styles.leftTitle}>Bienvenido de nuevo</h1>
+          <h1 style={styles.leftTitle}>Crea tu cuenta</h1>
           <p style={styles.leftText}>
-            Inicia sesión para continuar con la gestión del sistema de ventas,
-            inventario y facturación.
+            Regístrate para acceder al sistema y gestionar ventas, inventario y
+            facturación de forma rápida y organizada.
           </p>
 
           <div style={styles.featureList}>
-            <div style={styles.featureItem}>🔐 Acceso seguro</div>
-            <div style={styles.featureItem}>📦 Control de inventario</div>
-            <div style={styles.featureItem}>🧾 Facturación centralizada</div>
+            <div style={styles.featureItem}>✅ Registro rápido y sencillo</div>
+            <div style={styles.featureItem}>✅ Acceso seguro al sistema</div>
+            <div style={styles.featureItem}>✅ Interfaz amigable y clara</div>
           </div>
         </div>
 
         <div style={styles.card}>
           <div style={styles.header}>
-            <h2 style={styles.title}>Iniciar sesión</h2>
+            <h2 style={styles.title}>Registro</h2>
             <p style={styles.subtitle}>
-              Ingresa tus credenciales para acceder a rematePOS.
+              Completa tus datos para crear una nueva cuenta.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} style={styles.form}>
             <div style={styles.inputGroup}>
+              <label style={styles.label}>Nombre completo</label>
+              <input
+                type="text"
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
+                placeholder="Ej: Carlos Andrés"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Correo electrónico</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="correo@ejemplo.com"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
               <label style={styles.label}>Usuario</label>
               <input
                 type="text"
                 name="username"
-                placeholder="Escribe tu usuario"
                 value={form.username}
                 onChange={handleChange}
-                required
+                placeholder="Escribe tu usuario"
                 style={styles.input}
               />
             </div>
@@ -80,25 +146,37 @@ export default function LoginPage() {
               <input
                 type="password"
                 name="password"
-                placeholder="Escribe tu contraseña"
                 value={form.password}
                 onChange={handleChange}
-                required
+                placeholder="Mínimo 6 caracteres"
                 style={styles.input}
               />
             </div>
 
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Confirmar contraseña</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                placeholder="Repite la contraseña"
+                style={styles.input}
+              />
+            </div>
+
+            {message && <div style={styles.success}>{message}</div>}
             {error && <div style={styles.error}>{error}</div>}
 
             <button type="submit" disabled={loading} style={styles.button}>
-              {loading ? "Ingresando..." : "Entrar"}
+              {loading ? "Registrando..." : "Crear cuenta"}
             </button>
           </form>
 
           <div style={styles.footer}>
-            <span style={styles.footerText}>¿No tienes cuenta?</span>
-            <Link to="/register" style={styles.link}>
-              Regístrate aquí
+            <span style={styles.footerText}>¿Ya tienes cuenta?</span>
+            <Link to="/login" style={styles.link}>
+              Inicia sesión aquí
             </Link>
           </div>
         </div>
@@ -127,7 +205,7 @@ const styles = {
     boxShadow: "0 20px 45px rgba(15, 23, 42, 0.12)",
   },
   leftPanel: {
-    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
     color: "#ffffff",
     padding: "48px 40px",
     display: "flex",
@@ -138,7 +216,7 @@ const styles = {
     display: "inline-block",
     padding: "8px 14px",
     borderRadius: "999px",
-    background: "rgba(255,255,255,0.14)",
+    background: "rgba(255,255,255,0.18)",
     fontWeight: "800",
     marginBottom: "20px",
     width: "fit-content",
@@ -152,7 +230,7 @@ const styles = {
     marginTop: "16px",
     fontSize: "16px",
     lineHeight: 1.7,
-    color: "rgba(255,255,255,0.9)",
+    color: "rgba(255,255,255,0.92)",
   },
   featureList: {
     marginTop: "30px",
@@ -161,7 +239,7 @@ const styles = {
     gap: "14px",
   },
   featureItem: {
-    background: "rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.12)",
     padding: "14px 16px",
     borderRadius: "14px",
     fontWeight: "600",
@@ -218,6 +296,13 @@ const styles = {
     fontSize: "15px",
     cursor: "pointer",
     boxShadow: "0 10px 18px rgba(37, 99, 235, 0.22)",
+  },
+  success: {
+    background: "#dcfce7",
+    color: "#166534",
+    padding: "12px 14px",
+    borderRadius: "12px",
+    fontSize: "14px",
   },
   error: {
     background: "#fee2e2",
