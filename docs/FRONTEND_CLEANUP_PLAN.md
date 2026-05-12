@@ -6,6 +6,22 @@ HU-095 prepares the RematePOS frontend repository for a safe cleanup before any 
 
 This user story protects the repository from committing sensitive, generated, or heavy files. It does not change frontend behavior, routes, imports, components, services, or security logic.
 
+## Official Repository Path
+
+Official local Git repository:
+
+```text
+C:\Users\carlo\Downloads\microservicios\RematePos-Frontend\RematePos-Frontend
+```
+
+HU-095 was prepared in a clean worktree to avoid mixing existing functional changes:
+
+```text
+C:\Users\carlo\Downloads\microservicios\RematePos-Frontend-HU-095
+```
+
+The previous OneDrive frontend path should be treated only as a local working copy unless it is explicitly confirmed as the active Git clone.
+
 ## Detected Sensitive Or Generated Files
 
 The active frontend working tree previously showed local or untracked generated files such as:
