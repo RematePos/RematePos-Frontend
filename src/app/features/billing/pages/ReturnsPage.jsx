@@ -1,63 +1,111 @@
-import React, { useState } from "react";
-import { processReturn } from "../services/billingService";
+import React, { useMemo, useState } from "react";
+import { getInvoiceCopy, processReturn } from "../services/billingService";
 
 export default function ReturnsPage() {
-  const [form, setForm] = useState({
-    invoiceNumber: "",
-    productCode: "",
-    quantity: "",
-    reason: "",
-  });
-
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoiceData, setInvoiceData] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingInvoice, setLoadingInvoice] = useState(false);
+  const [loadingReturn, setLoadingReturn] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const selectedItem = useMemo(() => {
+    if (!invoiceData?.items || !selectedProductId) return null;
+    return invoiceData.items.find(
+      (item) => String(item.productId) === String(selectedProductId)
+    );
+  }, [invoiceData, selectedProductId]);
 
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const formatPrice = (value) => {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number(value || 0));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSearchInvoice = async (event) => {
+    event.preventDefault();
     setMessage("");
     setError("");
+    setInvoiceData(null);
+    setSelectedProductId("");
 
-    if (
-      !form.invoiceNumber.trim() ||
-      !form.productCode.trim() ||
-      !form.quantity.trim() ||
-      !form.reason.trim()
-    ) {
-      setError("Todos los campos de devolución son obligatorios.");
+    const cleanInvoiceNumber = invoiceNumber.trim();
+    if (!cleanInvoiceNumber) {
+      setError("Ingresa el numero de factura.");
       return;
     }
 
-    setLoading(true);
+    setLoadingInvoice(true);
 
     try {
-      await processReturn({
-        invoiceNumber: form.invoiceNumber.trim(),
-        productCode: form.productCode.trim(),
-        quantity: Number(form.quantity),
-        reason: form.reason.trim(),
+      const data = await getInvoiceCopy(cleanInvoiceNumber);
+      setInvoiceData(data);
+      const firstItem = Array.isArray(data.items) ? data.items[0] : null;
+      setSelectedProductId(firstItem ? String(firstItem.productId) : "");
+      setQuantity("1");
+    } catch (err) {
+      setError("No se encontro una factura con ese numero.");
+    } finally {
+      setLoadingInvoice(false);
+    }
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("");
+    setError("");
+
+    if (!invoiceData) {
+      setError("Primero busca la factura.");
+      return;
+    }
+
+    if (!selectedItem) {
+      setError("Selecciona el producto que se va a devolver.");
+      return;
+    }
+
+    const returnQuantity = Number(quantity);
+    if (!Number.isInteger(returnQuantity) || returnQuantity < 1) {
+      setError("La cantidad debe ser mayor a cero.");
+      return;
+    }
+
+    if (returnQuantity > Number(selectedItem.quantity || 0)) {
+      setError("No puedes devolver mas unidades que las compradas.");
+      return;
+    }
+
+    if (!reason.trim()) {
+      setError("Ingresa el motivo de la devolucion.");
+      return;
+    }
+
+    setLoadingReturn(true);
+
+    try {
+      const result = await processReturn({
+        invoiceNumber: invoiceData.invoiceNumber,
+        productId: selectedItem.productId,
+        quantity: returnQuantity,
+        reason: reason.trim(),
       });
 
-      setMessage("Devolución registrada correctamente.");
-      setForm({
-        invoiceNumber: "",
-        productCode: "",
-        quantity: "",
-        reason: "",
-      });
+      setMessage(
+        `Devolucion registrada. Producto #${result.productId} (${result.productName}) retorno ${result.returnedQuantity} unidad(es) al inventario.`
+      );
+      setReason("");
+      setQuantity("1");
     } catch (err) {
-      setError(err.message || "No fue posible registrar la devolución.");
+      setError(err.message || "No fue posible registrar la devolucion.");
     } finally {
-      setLoading(false);
+      setLoadingReturn(false);
     }
   };
 
@@ -65,107 +113,229 @@ export default function ReturnsPage() {
     <div style={styles.card}>
       <h2 style={styles.title}>Devoluciones</h2>
       <p style={styles.subtitle}>
-        Registra devoluciones a partir del número de factura.
+        Busca la factura y selecciona el producto comprado que vuelve al inventario.
       </p>
 
-      <form onSubmit={handleSubmit} style={styles.form}>
+      <form onSubmit={handleSearchInvoice} style={styles.searchRow}>
         <input
           type="text"
-          name="invoiceNumber"
-          value={form.invoiceNumber}
-          onChange={handleChange}
-          placeholder="Número de factura"
+          value={invoiceNumber}
+          onChange={(event) => setInvoiceNumber(event.target.value)}
+          placeholder="Ej: INV-20260506-11"
           style={styles.input}
         />
-
-        <input
-          type="text"
-          name="productCode"
-          value={form.productCode}
-          onChange={handleChange}
-          placeholder="Código del producto"
-          style={styles.input}
-        />
-
-        <input
-          type="number"
-          name="quantity"
-          value={form.quantity}
-          onChange={handleChange}
-          placeholder="Cantidad"
-          min="1"
-          style={styles.input}
-        />
-
-        <textarea
-          name="reason"
-          value={form.reason}
-          onChange={handleChange}
-          placeholder="Motivo de la devolución"
-          rows="4"
-          style={styles.textarea}
-        />
-
-        {message && <div style={styles.success}>{message}</div>}
-        {error && <div style={styles.error}>{error}</div>}
-
-        <button type="submit" disabled={loading} style={styles.button}>
-          {loading ? "Procesando..." : "Registrar devolución"}
+        <button type="submit" disabled={loadingInvoice} style={styles.button}>
+          {loadingInvoice ? "Buscando..." : "Buscar factura"}
         </button>
       </form>
+
+      {invoiceData && (
+        <form onSubmit={handleSubmit} style={styles.returnBox}>
+          <div style={styles.invoiceHeader}>
+            <div>
+              <span style={styles.kicker}>Factura</span>
+              <strong>{invoiceData.invoiceNumber}</strong>
+            </div>
+            <div>
+              <span style={styles.kicker}>Cliente</span>
+              <strong>{invoiceData.customerFullName || "-"}</strong>
+            </div>
+            <div>
+              <span style={styles.kicker}>Total</span>
+              <strong>{formatPrice(invoiceData.total)}</strong>
+            </div>
+          </div>
+
+          <div style={styles.itemsList}>
+            {invoiceData.items.map((item) => {
+              const active = String(item.productId) === String(selectedProductId);
+              return (
+                <button
+                  key={`${item.productId}-${item.productName}`}
+                  type="button"
+                  onClick={() => {
+                    setSelectedProductId(String(item.productId));
+                    setQuantity("1");
+                  }}
+                  style={{
+                    ...styles.itemButton,
+                    ...(active ? styles.itemButtonActive : {}),
+                  }}
+                >
+                  <span>
+                    <strong>{item.productName}</strong>
+                    <small>Codigo #{item.productId}</small>
+                  </span>
+                  <span style={styles.itemMeta}>
+                    <small>Cantidad {item.quantity}</small>
+                    <strong>{formatPrice(item.lineTotal)}</strong>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={styles.formGrid}>
+            <label style={styles.field}>
+              <span>Cantidad a devolver</span>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                min="1"
+                max={selectedItem?.quantity || 1}
+                style={styles.input}
+              />
+            </label>
+
+            <label style={styles.fieldWide}>
+              <span>Motivo</span>
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="Ej: Producto defectuoso, cambio solicitado, error en compra"
+                rows="4"
+                style={styles.textarea}
+              />
+            </label>
+          </div>
+
+          <button type="submit" disabled={loadingReturn} style={styles.button}>
+            {loadingReturn ? "Registrando..." : "Registrar devolucion"}
+          </button>
+        </form>
+      )}
+
+      {message && <div style={styles.success}>{message}</div>}
+      {error && <div style={styles.error}>{error}</div>}
     </div>
   );
 }
 
 const styles = {
   card: {
-    background: "#ffffff",
-    borderRadius: "16px",
+    background: "#202426",
+    borderRadius: "8px",
     padding: "24px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+    border: "1px solid #35506d",
+    boxShadow: "0 16px 38px rgba(0,0,0,0.16)",
   },
   title: {
     marginTop: 0,
+    color: "#f8fafc",
   },
   subtitle: {
-    color: "#5b6472",
+    color: "#d6d3cc",
     marginBottom: "20px",
   },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "14px",
+  searchRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: "12px",
+    marginBottom: "18px",
   },
   input: {
+    width: "100%",
+    boxSizing: "border-box",
     padding: "12px",
-    borderRadius: "10px",
-    border: "1px solid #d1d5db",
-  },
-  textarea: {
-    padding: "12px",
-    borderRadius: "10px",
-    border: "1px solid #d1d5db",
-    resize: "vertical",
+    borderRadius: "8px",
+    border: "1px solid #405675",
+    background: "#303334",
+    color: "#f8fafc",
   },
   button: {
     border: "none",
-    borderRadius: "10px",
+    borderRadius: "8px",
     background: "#2563eb",
     color: "#fff",
     padding: "12px 18px",
     fontWeight: "700",
     cursor: "pointer",
   },
-  success: {
-    background: "#dcfce7",
-    color: "#166534",
+  returnBox: {
+    display: "grid",
+    gap: "16px",
+  },
+  invoiceHeader: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: "12px",
+    padding: "14px",
+    borderRadius: "8px",
+    border: "1px solid #405675",
+  },
+  kicker: {
+    display: "block",
+    color: "#d6d3cc",
+    fontSize: "12px",
+    fontWeight: 800,
+    textTransform: "uppercase",
+    marginBottom: "4px",
+  },
+  itemsList: {
+    display: "grid",
+    gap: "10px",
+  },
+  itemButton: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    textAlign: "left",
+    padding: "14px",
+    borderRadius: "8px",
+    border: "1px solid #405675",
+    background: "#25292b",
+    color: "#f8fafc",
+    cursor: "pointer",
+  },
+  itemButtonActive: {
+    borderColor: "#22c55e",
+    background: "#123c2b",
+  },
+  itemMeta: {
+    display: "grid",
+    justifyItems: "end",
+    gap: "4px",
+  },
+  formGrid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(160px, 240px) 1fr",
+    gap: "12px",
+  },
+  field: {
+    display: "grid",
+    gap: "8px",
+    color: "#f8fafc",
+    fontWeight: 700,
+  },
+  fieldWide: {
+    display: "grid",
+    gap: "8px",
+    color: "#f8fafc",
+    fontWeight: 700,
+  },
+  textarea: {
+    width: "100%",
+    boxSizing: "border-box",
     padding: "12px",
-    borderRadius: "10px",
+    borderRadius: "8px",
+    border: "1px solid #405675",
+    background: "#303334",
+    color: "#f8fafc",
+    resize: "vertical",
+  },
+  success: {
+    marginTop: "14px",
+    background: "#0f6b3a",
+    color: "#f8fafc",
+    padding: "12px",
+    borderRadius: "8px",
   },
   error: {
-    background: "#fee2e2",
-    color: "#b91c1c",
+    marginTop: "14px",
+    background: "#7f1d1d",
+    color: "#fee2e2",
     padding: "12px",
-    borderRadius: "10px",
+    borderRadius: "8px",
   },
 };
