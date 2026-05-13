@@ -90,11 +90,13 @@ INV-20260513-22
 Frontend validation:
 
 ```text
-http://localhost:3000
-http://localhost:3000/billing
-http://localhost:3000/billing/invoice-copy
-http://localhost:3000/billing/returns
+http://localhost:3002
+http://localhost:3002/billing
+http://localhost:3002/billing/invoice-copy
+http://localhost:3002/billing/returns
 ```
+
+Port 3002 was used during HU-121 validation because port 3000 was already occupied by the previously validated frontend instance.
 
 Backend/API Gateway validation:
 
