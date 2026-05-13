@@ -11,13 +11,13 @@ The recovery was performed without touching backend repositories, backend PRs, o
 Validated frontend source:
 
 ```text
-C:\Users\carlo\OneDrive - corhuila.edu.co\CAV\OneDrive - corhuila.edu.co\Descargas\front-rematepos\RematePos-Frontend
+Local validated OneDrive frontend workspace used during development.
 ```
 
 Official frontend worktree:
 
 ```text
-C:\Users\carlo\Downloads\microservicios\RematePos-Frontend-HU-121
+Official RematePos-Frontend HU-121 worktree used for the recovery branch.
 ```
 
 Branch:
