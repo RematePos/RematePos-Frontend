@@ -24,7 +24,7 @@ This HU provides the core UI and API integration for category management.
   - Dark cohesive theme matching RematePOS design
   - Modal overlays and forms
   - Grid-based table layout
-  - Active/inactive status badge display
+  - Active/inactive status badge display derived from the API `status` value
 
 ### Services
 - **Product Service Extensions** (`src/app/features/products/services/productService.js`)
@@ -46,7 +46,6 @@ This HU provides the core UI and API integration for category management.
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | GET | `/api/v1/categories` | Fetch all categories (list view) |
-| GET | `/api/v1/categories?search=query` | Search categories by name |
 | GET | `/api/v1/categories/options` | Fetch category options for dropdowns |
 | POST | `/api/v1/categories` | Create new category |
 | PUT | `/api/v1/categories` | Update existing category (id in request body) |
@@ -66,8 +65,8 @@ This HU provides the core UI and API integration for category management.
 ### ✅ Category Listing
 - Categories page loads without errors
 - Existing categories from DB are fetched via GET `/api/v1/categories`
-- Categories display in table with name, description, status badge
-- Search field filters categories by name (optional in future: add debouncing)
+- Categories display in table with name, description, and status badge from `category.status`
+- Search field filters the loaded category list by name or description
 
 ### ✅ Category Creation
 - Click "+ Crear categoría" button opens create modal

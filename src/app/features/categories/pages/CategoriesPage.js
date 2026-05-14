@@ -12,6 +12,22 @@ const defaultForm = {
   description: "",
 };
 
+const getCategoryStatus = (status) => {
+  const normalizedStatus = (status || "ACTIVE").toUpperCase();
+
+  if (normalizedStatus === "INACTIVE") {
+    return {
+      className: "chip chip-inactive",
+      label: "Inactiva",
+    };
+  }
+
+  return {
+    className: "chip chip-active",
+    label: "Activa",
+  };
+};
+
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -200,24 +216,28 @@ const CategoriesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCategories.map((category) => (
-                  <tr key={category.id}>
-                    <td>{category.name}</td>
-                    <td>{category.description || "Sin descripción"}</td>
-                    <td>
-                      <span className="chip chip-active">Activa</span>
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-table"
-                        onClick={() => openEditModal(category)}
-                      >
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredCategories.map((category) => {
+                  const status = getCategoryStatus(category.status);
+
+                  return (
+                    <tr key={category.id}>
+                      <td>{category.name}</td>
+                      <td>{category.description || "Sin descripción"}</td>
+                      <td>
+                        <span className={status.className}>{status.label}</span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn btn-table"
+                          onClick={() => openEditModal(category)}
+                        >
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}

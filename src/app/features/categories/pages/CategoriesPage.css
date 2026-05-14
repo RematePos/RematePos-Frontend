@@ -123,6 +123,11 @@
   background: rgba(34, 197, 94, 0.22);
 }
 
+.chip-inactive {
+  color: #fed7aa;
+  background: rgba(234, 88, 12, 0.22);
+}
+
 .state-box {
   padding: 24px;
   color: #cbd5e1;
