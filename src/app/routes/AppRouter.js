@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 
 import InventoryPage from "../features/inventory/pages/InventoryPage";
@@ -7,6 +7,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 import SalesPage from "../features/sales/pages/SalesPage";
 import AccountSettingsPage from "../features/account/pages/AccountSettingsPage";
+import CategoriesPage from "../features/categories/pages/CategoriesPage";
 
 import BillingPage from "../features/billing/pages/BillingPage";
 import CustomerIdentificationPage from "../features/billing/pages/CustomerIdentificationPage";
@@ -23,7 +24,7 @@ const Layout = () => {
 
         <nav style={navStyle}>
           <NavLink to="/login" style={linkStyle}>
-            Iniciar sesión
+            Iniciar sesi├│n
           </NavLink>
 
           <NavLink to="/register" style={linkStyle}>
@@ -38,12 +39,16 @@ const Layout = () => {
             Inventario
           </NavLink>
 
+          <NavLink to="/categories" style={linkStyle}>
+            Categor├¡as
+          </NavLink>
+
           <NavLink to="/account" style={linkStyle}>
             Cuenta
           </NavLink>
 
           <NavLink to="/billing" style={linkStyle}>
-            Facturación
+            Facturaci├│n
           </NavLink>
         </nav>
       </header>
@@ -59,6 +64,7 @@ const Layout = () => {
 
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/inventory/new" element={<NewProductPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
 
           <Route
             path="/products"
@@ -135,3 +141,4 @@ const mainStyle = {
 };
 
 export default AppRouter;
+
