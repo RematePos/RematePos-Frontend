@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./NewProductPage.css";
-import { createProduct } from "../services/productService";
+import { createProduct, getCategoryOptions } from "../services/productService";
 
 const NewProductPage = () => {
   const navigate = useNavigate();
@@ -11,11 +11,35 @@ const NewProductPage = () => {
     description: "",
     price: "",
     stock: "",
+    categoryId: "",
   });
 
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        setCategoriesError("");
+
+        const data = await getCategoryOptions();
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+        setCategories([]);
+        setCategoriesError("No se pudieron cargar las categorias.");
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,6 +57,7 @@ const NewProductPage = () => {
       return "El precio debe ser mayor a 0.";
     if (form.stock === "" || Number(form.stock) < 0)
       return "El stock no puede ser negativo.";
+    if (!form.categoryId) return "La categoria es obligatoria.";
     return "";
   };
 
@@ -56,6 +81,7 @@ const NewProductPage = () => {
         description: form.description.trim(),
         price: Number(form.price),
         stock: Number(form.stock),
+        categoryId: Number(form.categoryId),
       });
 
       setSuccess("Producto creado correctamente.");
@@ -111,6 +137,39 @@ const NewProductPage = () => {
                   value={form.description}
                   onChange={handleChange}
                 />
+              </div>
+
+              <div className="form-group full-width">
+                <label htmlFor="categoryId">Categoria</label>
+                <select
+                  id="categoryId"
+                  name="categoryId"
+                  value={form.categoryId}
+                  onChange={handleChange}
+                  disabled={categoriesLoading || categories.length === 0}
+                >
+                  <option value="">
+                    {categoriesLoading
+                      ? "Cargando categorias..."
+                      : "Selecciona una categoria"}
+                  </option>
+
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+
+                {categoriesError && (
+                  <small className="form-hint error-hint">{categoriesError}</small>
+                )}
+
+                {!categoriesLoading && !categoriesError && categories.length === 0 && (
+                  <small className="form-hint">
+                    No hay categorias disponibles para crear productos.
+                  </small>
+                )}
               </div>
 
               <div className="form-group">
