@@ -148,7 +148,7 @@ This HU-151 provides the standalone category management page only.
 | Property | Value |
 |----------|-------|
 | Branch Name | `feature/HU-151-AFAF-category-management-ui` |
-| Base Commit | `b7080a9` (fix(HU-135): fix product creation category selector) |
+| Base Commit | `49b2e69` (fix(HU-155): use system font stack for UI text rendering) |
 | Base Branch | `develop` |
 | Status | Ready for PR review |
 
@@ -171,5 +171,5 @@ This HU-151 provides the standalone category management page only.
 ---
 
 **Evidence Date:** 2026-05-14
-**Prepared By:** Automated HU-151 Implementation
+**Prepared By:** AI-assisted local development support with human technical review
 **Status:** Ready for Review

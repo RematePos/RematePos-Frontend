@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./CategoriesPage.css";
 import {
   createCategory,
@@ -94,7 +94,7 @@ const CategoriesPage = () => {
     if (name.length < 2) return "El nombre debe tener al menos 2 caracteres.";
     if (name.length > 100) return "El nombre no puede superar 100 caracteres.";
     if ((form.description || "").length > 500) {
-      return "La descripci├│n no puede superar 500 caracteres.";
+      return "La descripción no puede superar 500 caracteres.";
     }
 
     return "";
@@ -123,10 +123,10 @@ const CategoriesPage = () => {
 
       if (form.id) {
         await updateCategory(payload);
-        setSuccess("Categor├¡a actualizada correctamente.");
+        setSuccess("Categoría actualizada correctamente.");
       } else {
         await createCategory(payload);
-        setSuccess("Categor├¡a creada correctamente.");
+        setSuccess("Categoría creada correctamente.");
       }
 
       await loadCategories();
@@ -136,9 +136,9 @@ const CategoriesPage = () => {
     } catch (err) {
       console.error(err);
       if ((err?.message || "").toLowerCase().includes("duplicate")) {
-        setError("Ya existe una categor├¡a con ese nombre.");
+        setError("Ya existe una categoría con ese nombre.");
       } else {
-        setError(err?.message || "No se pudo guardar la categor├¡a.");
+        setError(err?.message || "No se pudo guardar la categoría.");
       }
       setSuccess("");
     } finally {
@@ -152,22 +152,22 @@ const CategoriesPage = () => {
         <header className="categories-header">
           <div>
             <span className="categories-badge">Inventario</span>
-            <h1>Gesti├│n de categor├¡as</h1>
-            <p>Administra categor├¡as activas para productos del sistema POS.</p>
+            <h1>Gestión de categorías</h1>
+            <p>Administra categorías activas para productos del sistema POS.</p>
           </div>
           <button
             type="button"
             className="btn btn-primary"
             onClick={openCreateModal}
           >
-            + Nueva categor├¡a
+            + Nueva categoría
           </button>
         </header>
 
         <section className="categories-toolbar">
           <input
             type="text"
-            placeholder="Buscar categor├¡a por nombre o descripci├│n..."
+            placeholder="Buscar categoría por nombre o descripción..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -186,15 +186,15 @@ const CategoriesPage = () => {
 
         <section className="categories-card">
           {loading ? (
-            <div className="state-box">Cargando categor├¡as...</div>
+            <div className="state-box">Cargando categorías...</div>
           ) : filteredCategories.length === 0 ? (
-            <div className="state-box">No hay categor├¡as para mostrar.</div>
+            <div className="state-box">No hay categorías para mostrar.</div>
           ) : (
             <table className="categories-table">
               <thead>
                 <tr>
                   <th>Nombre</th>
-                  <th>Descripci├│n</th>
+                  <th>Descripción</th>
                   <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
@@ -203,7 +203,7 @@ const CategoriesPage = () => {
                 {filteredCategories.map((category) => (
                   <tr key={category.id}>
                     <td>{category.name}</td>
-                    <td>{category.description || "Sin descripci├│n"}</td>
+                    <td>{category.description || "Sin descripción"}</td>
                     <td>
                       <span className="chip chip-active">Activa</span>
                     </td>
@@ -227,11 +227,11 @@ const CategoriesPage = () => {
       {isModalOpen && (
         <div className="modal-overlay" role="presentation" onClick={closeModal}>
           <div className="modal-card" role="dialog" onClick={(event) => event.stopPropagation()}>
-            <h2>{form.id ? "Editar categor├¡a" : "Nueva categor├¡a"}</h2>
+            <h2>{form.id ? "Editar categoría" : "Nueva categoría"}</h2>
             <p>
               {form.id
-                ? "Actualiza los datos de la categor├¡a seleccionada."
-                : "Crea una categor├¡a que estar├í disponible en inventario y ventas."}
+                ? "Actualiza los datos de la categoría seleccionada."
+                : "Crea una categoría que estará disponible en inventario y ventas."}
             </p>
 
             <form onSubmit={handleSubmit} className="modal-form">
@@ -246,14 +246,14 @@ const CategoriesPage = () => {
                 autoFocus
               />
 
-              <label htmlFor="category-description">Descripci├│n</label>
+              <label htmlFor="category-description">Descripción</label>
               <textarea
                 id="category-description"
                 name="description"
                 rows="4"
                 value={form.description}
                 onChange={handleChange}
-                placeholder="Describe la categor├¡a"
+                placeholder="Describe la categoría"
               />
 
               {error && <div className="banner error">{error}</div>}
@@ -269,7 +269,7 @@ const CategoriesPage = () => {
                   Cancelar
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? "Guardando..." : form.id ? "Guardar cambios" : "Crear categor├¡a"}
+                  {saving ? "Guardando..." : form.id ? "Guardar cambios" : "Crear categoría"}
                 </button>
               </div>
             </form>

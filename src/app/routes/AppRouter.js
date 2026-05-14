@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 
 import InventoryPage from "../features/inventory/pages/InventoryPage";
@@ -24,7 +24,7 @@ const Layout = () => {
 
         <nav style={navStyle}>
           <NavLink to="/login" style={linkStyle}>
-            Iniciar sesi├│n
+            Iniciar sesión
           </NavLink>
 
           <NavLink to="/register" style={linkStyle}>
@@ -40,7 +40,7 @@ const Layout = () => {
           </NavLink>
 
           <NavLink to="/categories" style={linkStyle}>
-            Categor├¡as
+            Categorías
           </NavLink>
 
           <NavLink to="/account" style={linkStyle}>
@@ -48,7 +48,7 @@ const Layout = () => {
           </NavLink>
 
           <NavLink to="/billing" style={linkStyle}>
-            Facturaci├│n
+            Facturación
           </NavLink>
         </nav>
       </header>
@@ -141,4 +141,3 @@ const mainStyle = {
 };
 
 export default AppRouter;
-
