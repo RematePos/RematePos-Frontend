@@ -81,7 +81,8 @@
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid #dbe2ea;
@@ -93,9 +94,26 @@
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   border-color: #6366f1;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+.form-group select:disabled {
+  color: #94a3b8;
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.error-hint {
+  color: #b91c1c;
 }
 
 .form-message {
