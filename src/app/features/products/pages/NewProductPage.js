@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./NewProductPage.css";
-import { createProduct, getCategoryOptions } from "../services/productService";
+import {
+  createCategory,
+  createProduct,
+  getCategoryOptions,
+} from "../services/productService";
 
 const NewProductPage = () => {
   const navigate = useNavigate();
@@ -17,27 +21,48 @@ const NewProductPage = () => {
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [categoryModalSaving, setCategoryModalSaving] = useState(false);
+  const [categoryModalError, setCategoryModalError] = useState("");
+  const [categoryModalSuccess, setCategoryModalSuccess] = useState("");
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    description: "",
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        setCategoriesError("");
+  const loadCategories = async (selectedCategoryId = null) => {
+    try {
+      setCategoriesLoading(true);
+      setCategoriesError("");
 
-        const data = await getCategoryOptions();
-        setCategories(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
-        setCategories([]);
-        setCategoriesError("No se pudieron cargar las categorias.");
-      } finally {
-        setCategoriesLoading(false);
+      const data = await getCategoryOptions();
+      const parsed = Array.isArray(data) ? data : [];
+      setCategories(parsed);
+
+      if (selectedCategoryId != null) {
+        const idAsString = String(selectedCategoryId);
+        const exists = parsed.some((category) => String(category.id) === idAsString);
+
+        if (exists) {
+          setForm((prev) => ({
+            ...prev,
+            categoryId: idAsString,
+          }));
+        }
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setCategories([]);
+      setCategoriesError("No se pudieron cargar las categorias.");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadCategories();
   }, []);
 
@@ -59,6 +84,73 @@ const NewProductPage = () => {
       return "El stock no puede ser negativo.";
     if (!form.categoryId) return "La categoria es obligatoria.";
     return "";
+  };
+
+  const validateCategoryForm = () => {
+    const name = categoryForm.name.trim();
+    if (!name) return "El nombre de la categoría es obligatorio.";
+    if (name.length < 2) return "La categoría debe tener al menos 2 caracteres.";
+    if (name.length > 100) return "La categoría no puede superar 100 caracteres.";
+    if ((categoryForm.description || "").length > 500) {
+      return "La descripción no puede superar 500 caracteres.";
+    }
+    return "";
+  };
+
+  const closeCategoryModal = () => {
+    setCategoryModalOpen(false);
+    setCategoryModalError("");
+    setCategoryModalSuccess("");
+    setCategoryForm({ name: "", description: "" });
+  };
+
+  const handleCategoryFormChange = (event) => {
+    const { name, value } = event.target;
+    setCategoryForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateCategoryFromModal = async (event) => {
+    event.preventDefault();
+
+    const validationError = validateCategoryForm();
+    if (validationError) {
+      setCategoryModalError(validationError);
+      setCategoryModalSuccess("");
+      return;
+    }
+
+    try {
+      setCategoryModalSaving(true);
+      setCategoryModalError("");
+      setCategoryModalSuccess("");
+
+      const createdCategoryId = await createCategory({
+        name: categoryForm.name.trim(),
+        description: categoryForm.description.trim(),
+      });
+
+      await loadCategories(createdCategoryId);
+      setCategoryModalSuccess("Categoría creada correctamente y seleccionada.");
+      setSuccess("Categoría creada correctamente.");
+
+      setTimeout(() => {
+        closeCategoryModal();
+      }, 450);
+    } catch (err) {
+      console.error(err);
+      const message = (err?.message || "").toLowerCase();
+      if (message.includes("duplicate") || message.includes("already")) {
+        setCategoryModalError("Ya existe una categoría con ese nombre.");
+      } else {
+        setCategoryModalError(err?.message || "No se pudo crear la categoría.");
+      }
+      setCategoryModalSuccess("");
+    } finally {
+      setCategoryModalSaving(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -140,7 +232,17 @@ const NewProductPage = () => {
               </div>
 
               <div className="form-group full-width">
-                <label htmlFor="categoryId">Categoria</label>
+                <div className="category-headline">
+                  <label htmlFor="categoryId">Categoria</label>
+                  <button
+                    type="button"
+                    className="btn btn-inline"
+                    onClick={() => setCategoryModalOpen(true)}
+                  >
+                    + Nueva categoría
+                  </button>
+                </div>
+
                 <select
                   id="categoryId"
                   name="categoryId"
@@ -214,6 +316,73 @@ const NewProductPage = () => {
           </form>
         </div>
       </div>
+
+      {categoryModalOpen && (
+        <div
+          className="modal-overlay"
+          role="presentation"
+          onClick={closeCategoryModal}
+        >
+          <div
+            className="modal-card"
+            role="dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2>Nueva categoría</h2>
+            <p>
+              Crea una categoría rápida y úsala de inmediato en este producto.
+            </p>
+
+            <form className="modal-form" onSubmit={handleCreateCategoryFromModal}>
+              <label htmlFor="quick-category-name">Nombre</label>
+              <input
+                id="quick-category-name"
+                name="name"
+                type="text"
+                value={categoryForm.name}
+                onChange={handleCategoryFormChange}
+                placeholder="Ej: Ferretería"
+                autoFocus
+              />
+
+              <label htmlFor="quick-category-description">Descripción</label>
+              <textarea
+                id="quick-category-description"
+                name="description"
+                rows="4"
+                value={categoryForm.description}
+                onChange={handleCategoryFormChange}
+                placeholder="Descripción corta de la categoría"
+              />
+
+              {categoryModalError && (
+                <div className="form-message error-message">{categoryModalError}</div>
+              )}
+              {categoryModalSuccess && (
+                <div className="form-message success-message">{categoryModalSuccess}</div>
+              )}
+
+              <div className="form-actions modal-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeCategoryModal}
+                  disabled={categoryModalSaving}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={categoryModalSaving}
+                >
+                  {categoryModalSaving ? "Guardando..." : "Crear categoría"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
