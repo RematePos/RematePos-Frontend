@@ -7,6 +7,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 import SalesPage from "../features/sales/pages/SalesPage";
 import AccountSettingsPage from "../features/account/pages/AccountSettingsPage";
+import CategoriesPage from "../features/categories/pages/CategoriesPage";
 
 import BillingPage from "../features/billing/pages/BillingPage";
 import CustomerIdentificationPage from "../features/billing/pages/CustomerIdentificationPage";
@@ -38,6 +39,10 @@ const Layout = () => {
             Inventario
           </NavLink>
 
+          <NavLink to="/categories" style={linkStyle}>
+            Categorías
+          </NavLink>
+
           <NavLink to="/account" style={linkStyle}>
             Cuenta
           </NavLink>
@@ -59,6 +64,7 @@ const Layout = () => {
 
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/inventory/new" element={<NewProductPage />} />
+          <Route path="/categories" element={<CategoriesPage />} />
 
           <Route
             path="/products"
