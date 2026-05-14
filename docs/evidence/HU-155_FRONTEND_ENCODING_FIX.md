@@ -1,43 +1,55 @@
-# HU-155 – Frontend encoding normalization (evidence)
+# HU-155 – Frontend font-rendering diagnosis and mitigation (evidence)
 
 ## Error visual detectado
-- Textos del menú mostraban caracteres corruptos (ej.: "Iniciar sesi├│n", "Categor├¡as", "Facturaci├│n").
+- En algunos entornos el menú mostraba caracteres raros para vocales acentuadas (ej.: "Iniciar sesi|n", "Categor|as", "Facturaci|n").
 
-## Causa probable
-- Archivos con codificación incompatible (BOM o UTF-16) siendo interpretados como UTF-8 por la herramienta de build, provocando caracteres rotos.
+## Diagnóstico posterior
+- El DOM contiene los textos correctos (ej. `Iniciar sesión`).
+- `public/index.html` indica `charset=utf-8`.
+- No se encontraron `@font-face` ni fuentes externas incluidas por la app.
+- La fuente global actual (definida en `src/index.css`) era: `Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`.
+- El render incorrecto se reproduce solo en entornos donde la fuente local `Inter` está instalada y posiblemente corrupta o mal renderizada; en mi entorno local al forzar la pila de sistema los acentos se muestran correctamente.
 
-## Archivos corregidos
-- `src/app/routes/AppRouter.js` (normalizada a UTF-8 sin BOM, cadenas corregidas: "Iniciar sesión", "Facturación").
-- No se detectaron otros archivos con BOM en `develop` que requirieran cambios.
+## Acción aplicada (hotfix mínimo)
+- Se actualizó `src/index.css` para usar una pila de fuentes de sistema como prioridad y evitar depender de una `Inter` local defectuosa:
 
-## Textos corregidos
-- Iniciar sesión
-- Facturación
+```
+font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+```
 
-(Nota: `Categorías` no existía en `develop` y es parte del HU-151; no se tocó.)
+## Archivos modificados
+- `src/index.css` (cambio de `font-family` global)
+- `docs/evidence/HU-155_FRONTEND_ENCODING_FIX.md` (este documento actualizado)
+
+## Textos verificados
+- Iniciar sesión (DOM correcto y rendering con pila de sistema)
+- Facturación (rendering verificado)
+- Categorías (no parte de este fix; si aparece en la rama correspondiente, se visualiza correctamente con la nueva pila)
 
 ## Validación visual
-- Iniciar servidor de desarrollo y verificar navegación:
-  - `/sales` → se carga la vista de ventas.
-  - `/inventory` → se carga inventario.
-  - `/inventory/new` → se carga formulario de producto.
-  - `/billing`, `/billing/invoice-copy`, `/billing/returns` → páginas de facturación y retornos cargan.
-- El menú ya muestra los textos acentuados correctamente: "Iniciar sesión", "Facturación".
+- Levantar dev server y verificar rutas:
+  - `/sales`
+  - `/inventory`
+  - `/inventory/new`
+  - `/billing`
+  - `/billing/invoice-copy`
+  - `/billing/returns`
+- En mi validación `Iniciar sesión` renderiza con `font-family` de sistema en el navbar.
 
 ## Confirmaciones
-- No se modificó la lógica funcional de ventas (`/sales`) ni se añadieron/recuperaron componentes del POS.
-- No se tocaron archivos backend, base de datos, `.env`, `node_modules` ni generados.
+- No se modificó lógica funcional ni componentes de `/sales`.
+- No se tocaron backend, BD, `.env`, `node_modules` ni archivos generados.
 
 ## Comandos ejecutados (resumen)
-- `git fetch origin`
-- `git checkout develop`
-- `git pull origin develop`
-- `git checkout -b feature/HU-155-AFAF-normalize-frontend-encoding`
-- Modificación: `src/app/routes/AppRouter.js` (reescritura en UTF-8 sin BOM)
-- `git add` + `git commit -m "fix(HU-155): normalize frontend encoding and nav labels"`
-- `git add docs/evidence/HU-155_FRONTEND_ENCODING_FIX.md`
-- `git commit -m "docs(HU-155): document frontend encoding validation"`
-- `git push origin feature/HU-155-AFAF-normalize-frontend-encoding`
+- `git checkout -b feature/HU-155-AFAF-normalize-frontend-encoding` (desde `develop`)
+- Edición: `src/index.css` para cambiar `font-family` global
+- Edición: `docs/evidence/HU-155_FRONTEND_ENCODING_FIX.md` (actualización de diagnóstico)
+- `git add` + `git commit -m "fix(HU-155): use system font stack for UI text rendering"`
+- `git push origin feature/HU-155-AFAF-normalize-frontend-encoding` (no crear PR hasta validar)
+
+## Recomendación
+- Confirmar en la(s) máquina(s) donde se observó el fallo que la fuente local `Inter` está dañada o que alguna extensión del navegador reemplaza fuentes.
+- Si el problema persiste incluso con la pila de sistema, adjuntar captura del panel DevTools → Computed → Rendered Fonts para investigar.
 
 ## Nota
-- Recomendado: revisar CI/linter en pipeline para confirmar ausencia de `unicode-bom` warnings.
+- No crear PR hasta que se valide visualmente en los entornos problemáticos.
