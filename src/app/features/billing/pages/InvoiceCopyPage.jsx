@@ -153,21 +153,28 @@ export default function InvoiceCopyPage() {
           <div style={styles.itemsBox}>
             <strong>Productos comprados</strong>
             {Array.isArray(invoiceData.items) && invoiceData.items.length > 0 ? (
-              <div style={styles.itemsList}>
-                {invoiceData.items.map((item) => (
-                  <div key={`${item.productId}-${item.productName}`} style={styles.item}>
-                    <div style={styles.itemInfo}>
-                      <strong>{item.productName || "Producto"}</strong>
-                      <span style={styles.productCode}>Codigo #{item.productId}</span>
-                      <span>Cantidad: {item.quantity}</span>
-                    </div>
-                    <div style={styles.itemAmount}>
-                      <span>{formatPrice(item.unitPrice)} unidad</span>
-                      <strong>{formatPrice(item.lineTotal)}</strong>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <table style={styles.itemsTable}>
+                <thead>
+                  <tr>
+                    <th style={styles.tableHeaderProduct}>PRODUCTO</th>
+                    <th style={styles.tableHeaderCode}>ID</th>
+                    <th style={styles.tableHeaderQty}>CANT</th>
+                    <th style={styles.tableHeaderPrice}>PRECIO</th>
+                    <th style={styles.tableHeaderSubtotal}>SUBTOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceData.items.map((item) => (
+                    <tr key={`${item.productId}-${item.productName}`}>
+                      <td style={styles.tableDataProduct}>{item.productName || "Producto"}</td>
+                      <td style={styles.tableDataCode}>{item.productId}</td>
+                      <td style={styles.tableDataQty}>{item.quantity}</td>
+                      <td style={styles.tableDataPrice}>{formatPrice(item.unitPrice)}</td>
+                      <td style={styles.tableDataSubtotal}>{formatPrice(item.lineTotal)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
               <p style={styles.noData}>No hay productos para mostrar.</p>
             )}
@@ -394,5 +401,86 @@ const styles = {
     color: "#b91c1c",
     padding: "12px",
     borderRadius: "8px",
+  },
+  itemsTable: {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginTop: "8px",
+    fontSize: "14px",
+  },
+  tableHeaderProduct: {
+    padding: "10px",
+    textAlign: "left",
+    borderBottom: "2px solid #2563eb",
+    fontWeight: "bold",
+    fontSize: "12px",
+    color: "#1d4ed8",
+    textTransform: "uppercase",
+  },
+  tableHeaderCode: {
+    padding: "10px",
+    textAlign: "center",
+    borderBottom: "2px solid #2563eb",
+    fontWeight: "bold",
+    fontSize: "12px",
+    color: "#1d4ed8",
+    textTransform: "uppercase",
+    width: "60px",
+  },
+  tableHeaderQty: {
+    padding: "10px",
+    textAlign: "center",
+    borderBottom: "2px solid #2563eb",
+    fontWeight: "bold",
+    fontSize: "12px",
+    color: "#1d4ed8",
+    textTransform: "uppercase",
+    width: "70px",
+  },
+  tableHeaderPrice: {
+    padding: "10px",
+    textAlign: "right",
+    borderBottom: "2px solid #2563eb",
+    fontWeight: "bold",
+    fontSize: "12px",
+    color: "#1d4ed8",
+    textTransform: "uppercase",
+    width: "110px",
+  },
+  tableHeaderSubtotal: {
+    padding: "10px",
+    textAlign: "right",
+    borderBottom: "2px solid #2563eb",
+    fontWeight: "bold",
+    fontSize: "12px",
+    color: "#1d4ed8",
+    textTransform: "uppercase",
+    width: "120px",
+  },
+  tableDataProduct: {
+    padding: "10px",
+    textAlign: "left",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tableDataCode: {
+    padding: "10px",
+    textAlign: "center",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tableDataQty: {
+    padding: "10px",
+    textAlign: "center",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tableDataPrice: {
+    padding: "10px",
+    textAlign: "right",
+    borderBottom: "1px solid #e5e7eb",
+  },
+  tableDataSubtotal: {
+    padding: "10px",
+    textAlign: "right",
+    borderBottom: "1px solid #e5e7eb",
+    fontWeight: "bold",
   },
 };
