@@ -7,6 +7,9 @@ export default function ReturnsPage() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [reason, setReason] = useState("");
+  const [returnType, setReturnType] = useState("CASH_REFUND");
+  const [blockedProductIds, setBlockedProductIds] = useState({});
+  const [lastReturnResult, setLastReturnResult] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loadingInvoice, setLoadingInvoice] = useState(false);
@@ -18,6 +21,15 @@ export default function ReturnsPage() {
       (item) => String(item.productId) === String(selectedProductId)
     );
   }, [invoiceData, selectedProductId]);
+
+  const returnQuantity = Number(quantity);
+  const estimatedRefund =
+    selectedItem && Number.isFinite(returnQuantity) && returnQuantity > 0
+      ? Number(selectedItem.unitPrice || 0) * returnQuantity
+      : 0;
+  const selectedProductBlocked = Boolean(
+    selectedProductId && blockedProductIds[String(selectedProductId)]
+  );
 
   const formatPrice = (value) => {
     return new Intl.NumberFormat("es-CO", {
@@ -34,6 +46,9 @@ export default function ReturnsPage() {
     setError("");
     setInvoiceData(null);
     setSelectedProductId("");
+    setReturnType("CASH_REFUND");
+    setBlockedProductIds({});
+    setLastReturnResult(null);
 
     const cleanInvoiceNumber = invoiceNumber.trim();
     if (!cleanInvoiceNumber) {
@@ -71,14 +86,25 @@ export default function ReturnsPage() {
       return;
     }
 
-    const returnQuantity = Number(quantity);
     if (!Number.isInteger(returnQuantity) || returnQuantity < 1) {
       setError("La cantidad debe ser mayor a cero.");
       return;
     }
 
+    if (selectedProductBlocked) {
+      setError("Este producto ya no tiene unidades disponibles para devolver.");
+      return;
+    }
+
     if (returnQuantity > Number(selectedItem.quantity || 0)) {
       setError("No puedes devolver mas unidades que las compradas.");
+      return;
+    }
+
+    if (returnType === "PRODUCT_EXCHANGE") {
+      setError(
+        "El cambio por producto requiere soporte backend para producto reemplazo, stock y auditoria. Queda pendiente para una HU posterior."
+      );
       return;
     }
 
@@ -97,13 +123,33 @@ export default function ReturnsPage() {
         reason: reason.trim(),
       });
 
+      setLastReturnResult(result);
+      if (
+        Number(result.totalReturnedQuantity || 0) >=
+        Number(result.purchasedQuantity || selectedItem.quantity || 0)
+      ) {
+        setBlockedProductIds((prev) => ({
+          ...prev,
+          [String(selectedItem.productId)]: true,
+        }));
+      }
+
       setMessage(
-        `Devolucion registrada. Producto #${result.productId} (${result.productName}) retorno ${result.returnedQuantity} unidad(es) al inventario.`
+        `Devolucion registrada. Producto #${result.productId} (${result.productName}) retorno ${result.returnedQuantity} unidad(es) al inventario. Total devuelto: ${result.totalReturnedQuantity}/${result.purchasedQuantity}.`
       );
       setReason("");
       setQuantity("1");
     } catch (err) {
-      setError(err.message || "No fue posible registrar la devolucion.");
+      const detail = err.message || "No fue posible registrar la devolucion.";
+      if (detail.includes("available purchased quantity: 0")) {
+        setBlockedProductIds((prev) => ({
+          ...prev,
+          [String(selectedItem.productId)]: true,
+        }));
+        setError("Este producto ya no tiene unidades disponibles para devolver.");
+      } else {
+        setError(detail);
+      }
     } finally {
       setLoadingReturn(false);
     }
@@ -156,10 +202,16 @@ export default function ReturnsPage() {
                   onClick={() => {
                     setSelectedProductId(String(item.productId));
                     setQuantity("1");
+                    setMessage("");
+                    setError("");
+                    setLastReturnResult(null);
                   }}
                   style={{
                     ...styles.itemButton,
                     ...(active ? styles.itemButtonActive : {}),
+                    ...(blockedProductIds[String(item.productId)]
+                      ? styles.itemButtonBlocked
+                      : {}),
                   }}
                 >
                   <span>
@@ -168,12 +220,74 @@ export default function ReturnsPage() {
                   </span>
                   <span style={styles.itemMeta}>
                     <small>Cantidad {item.quantity}</small>
+                    {blockedProductIds[String(item.productId)] && (
+                      <small style={styles.warningText}>Sin saldo disponible</small>
+                    )}
                     <strong>{formatPrice(item.lineTotal)}</strong>
                   </span>
                 </button>
               );
             })}
           </div>
+
+          <section style={styles.flowPanel}>
+            <span style={styles.kicker}>Tipo de devolucion</span>
+            <div style={styles.returnTypeGrid}>
+              <button
+                type="button"
+                onClick={() => setReturnType("CASH_REFUND")}
+                style={{
+                  ...styles.returnTypeButton,
+                  ...(returnType === "CASH_REFUND" ? styles.returnTypeActive : {}),
+                }}
+              >
+                Devolucion en efectivo
+              </button>
+              <button
+                type="button"
+                onClick={() => setReturnType("PRODUCT_EXCHANGE")}
+                style={{
+                  ...styles.returnTypeButton,
+                  ...(returnType === "PRODUCT_EXCHANGE"
+                    ? styles.returnTypeActive
+                    : {}),
+                }}
+              >
+                Cambio por producto
+              </button>
+            </div>
+
+            {returnType === "CASH_REFUND" ? (
+              <p style={styles.flowHint}>
+                La API actual registra la devolucion de inventario. La salida de
+                caja por efectivo queda pendiente hasta implementar caja.
+              </p>
+            ) : (
+              <div style={styles.pendingBox}>
+                <strong>Cambio por producto pendiente</strong>
+                <p>
+                  Requiere soporte backend para producto reemplazo, ajuste de
+                  stock y auditoria de la devolucion.
+                </p>
+                <select disabled style={styles.input}>
+                  <option>Producto reemplazo pendiente de HU backend</option>
+                </select>
+              </div>
+            )}
+          </section>
+
+          {selectedProductBlocked && (
+            <div style={styles.warningBox}>
+              Este producto ya no tiene unidades disponibles para devolver.
+            </div>
+          )}
+
+          {selectedItem && (
+            <div style={styles.refundBox}>
+              <span>Valor estimado a devolver</span>
+              <strong>{formatPrice(estimatedRefund)}</strong>
+            </div>
+          )}
 
           <div style={styles.formGrid}>
             <label style={styles.field}>
@@ -200,7 +314,27 @@ export default function ReturnsPage() {
             </label>
           </div>
 
-          <button type="submit" disabled={loadingReturn} style={styles.button}>
+          {lastReturnResult && (
+            <div style={styles.returnResult}>
+              <strong>Resultado de devolucion</strong>
+              <span>Producto #{lastReturnResult.productId}</span>
+              <span>
+                Devuelto: {lastReturnResult.totalReturnedQuantity}/
+                {lastReturnResult.purchasedQuantity}
+              </span>
+              <span>{lastReturnResult.message}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={
+              loadingReturn ||
+              selectedProductBlocked ||
+              returnType === "PRODUCT_EXCHANGE"
+            }
+            style={styles.button}
+          >
             {loadingReturn ? "Registrando..." : "Registrar devolucion"}
           </button>
         </form>
@@ -292,10 +426,72 @@ const styles = {
     borderColor: "#22c55e",
     background: "#123c2b",
   },
+  itemButtonBlocked: {
+    opacity: 0.72,
+    borderColor: "#7f1d1d",
+  },
   itemMeta: {
     display: "grid",
     justifyItems: "end",
     gap: "4px",
+  },
+  warningText: {
+    color: "#fca5a5",
+    fontWeight: 800,
+  },
+  flowPanel: {
+    display: "grid",
+    gap: "10px",
+    padding: "14px",
+    borderRadius: "8px",
+    border: "1px solid #405675",
+    background: "#25292b",
+  },
+  returnTypeGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: "10px",
+  },
+  returnTypeButton: {
+    border: "1px solid #405675",
+    borderRadius: "8px",
+    background: "#303334",
+    color: "#f8fafc",
+    padding: "12px",
+    fontWeight: 800,
+    cursor: "pointer",
+  },
+  returnTypeActive: {
+    borderColor: "#22c55e",
+    background: "#123c2b",
+  },
+  flowHint: {
+    margin: 0,
+    color: "#d6d3cc",
+    lineHeight: 1.45,
+  },
+  pendingBox: {
+    display: "grid",
+    gap: "8px",
+    color: "#f8fafc",
+  },
+  warningBox: {
+    color: "#fecaca",
+    background: "#7f1d1d",
+    border: "1px solid #fca5a5",
+    borderRadius: "8px",
+    padding: "12px",
+    fontWeight: 800,
+  },
+  refundBox: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    padding: "12px",
+    borderRadius: "8px",
+    color: "#ecfdf5",
+    background: "#0f6b3a",
+    fontWeight: 800,
   },
   formGrid: {
     display: "grid",
@@ -323,6 +519,15 @@ const styles = {
     background: "#303334",
     color: "#f8fafc",
     resize: "vertical",
+  },
+  returnResult: {
+    display: "grid",
+    gap: "4px",
+    padding: "12px",
+    borderRadius: "8px",
+    color: "#ecfdf5",
+    background: "#064e3b",
+    border: "1px solid #22c55e",
   },
   success: {
     marginTop: "14px",
