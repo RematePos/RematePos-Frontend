@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import "./AccountSettingsPage.css";
 
+const ACCOUNT_PENDING_MESSAGE =
+  "Esta pantalla sera conectada a autenticacion real, JWT y gestion segura de usuarios en una HU futura.";
+
 const AccountSettingsPage = () => {
   const [profileForm, setProfileForm] = useState({
     username: "admin_rematepos",
@@ -36,26 +39,21 @@ const AccountSettingsPage = () => {
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
-    setProfileError("");
     setProfileMessage("");
-
-    if (!profileForm.username.trim()) {
-      setProfileError("El nombre de usuario es obligatorio.");
-      return;
-    }
-
-    if (!profileForm.email.trim()) {
-      setProfileError("El correo es obligatorio.");
-      return;
-    }
-
-    setProfileMessage("Datos de usuario actualizados correctamente.");
+    setProfileError(ACCOUNT_PENDING_MESSAGE);
   };
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
     setPasswordError("");
     setPasswordMessage("");
+
+    const accountSecurityEnabled =
+      process.env.REACT_APP_ENABLE_ACCOUNT_SECURITY === "true";
+    if (!accountSecurityEnabled) {
+      setPasswordError(ACCOUNT_PENDING_MESSAGE);
+      return;
+    }
 
     if (!passwordForm.currentPassword.trim()) {
       setPasswordError("Debes ingresar la contraseña actual.");
@@ -92,6 +90,8 @@ const AccountSettingsPage = () => {
           </div>
         </div>
 
+        <div className="account-warning">{ACCOUNT_PENDING_MESSAGE}</div>
+
         <div className="account-grid">
           <div className="account-card">
             <h2>Información de usuario</h2>
@@ -108,6 +108,7 @@ const AccountSettingsPage = () => {
                   value={profileForm.username}
                   onChange={handleProfileChange}
                   placeholder="Ej: admin_rematepos"
+                  disabled
                 />
               </div>
 
@@ -119,6 +120,7 @@ const AccountSettingsPage = () => {
                   value={profileForm.email}
                   onChange={handleProfileChange}
                   placeholder="correo@empresa.com"
+                  disabled
                 />
               </div>
 
@@ -132,8 +134,13 @@ const AccountSettingsPage = () => {
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary">
-                Guardar cambios
+              <button
+                type="submit"
+                className="btn btn-primary btn-disabled"
+                aria-label="Pendiente de autenticacion"
+                disabled
+              >
+                Pendiente de autenticacion
               </button>
             </form>
           </div>
@@ -153,6 +160,7 @@ const AccountSettingsPage = () => {
                   value={passwordForm.currentPassword}
                   onChange={handlePasswordChange}
                   placeholder="********"
+                  disabled
                 />
               </div>
 
@@ -164,6 +172,7 @@ const AccountSettingsPage = () => {
                   value={passwordForm.newPassword}
                   onChange={handlePasswordChange}
                   placeholder="********"
+                  disabled
                 />
               </div>
 
@@ -175,6 +184,7 @@ const AccountSettingsPage = () => {
                   value={passwordForm.confirmPassword}
                   onChange={handlePasswordChange}
                   placeholder="********"
+                  disabled
                 />
               </div>
 
@@ -188,7 +198,12 @@ const AccountSettingsPage = () => {
                 </div>
               )}
 
-              <button type="submit" className="btn btn-primary">
+              <button
+                type="submit"
+                className="btn btn-primary btn-disabled"
+                aria-label="Pendiente de autenticacion"
+                disabled
+              >
                 Actualizar contraseña
               </button>
             </form>
