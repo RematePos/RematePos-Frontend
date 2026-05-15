@@ -1,0 +1,230 @@
+.sale-receipt {
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.receipt-container {
+  max-width: 500px;
+  margin: 0 auto;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Receipt Header */
+.receipt-header-section {
+  text-align: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.receipt-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.receipt-number {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Customer Section */
+.receipt-customer-section {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.info-row .label {
+  font-weight: bold;
+  flex-shrink: 0;
+  width: 40%;
+  text-align: left;
+}
+
+.info-row .value {
+  flex: 1;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Invoice Section */
+.receipt-invoice-section {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Items Table */
+.receipt-items-section {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+  overflow-x: auto;
+}
+
+.receipt-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.receipt-items-table thead {
+  border-bottom: 1px solid #000;
+}
+
+.receipt-items-table th {
+  padding: 4px 2px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.receipt-items-table td {
+  padding: 4px 2px;
+  border-bottom: 1px solid #eee;
+}
+
+.col-product {
+  width: 50%;
+}
+
+.col-qty {
+  width: 10%;
+  text-align: center;
+}
+
+.col-price {
+  width: 20%;
+  text-align: right;
+}
+
+.col-subtotal {
+  width: 20%;
+  text-align: right;
+  font-weight: bold;
+}
+
+.product-name {
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.product-category {
+  font-size: 9px;
+  color: #666;
+}
+
+/* Totals Section */
+.receipt-totals-section {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.totals-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 11px;
+}
+
+.totals-row.total-final {
+  font-weight: bold;
+  font-size: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #000;
+}
+
+/* Payment Section */
+.receipt-payment-section {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ccc;
+}
+
+.payment-status {
+  font-weight: bold;
+  color: #2ecc71;
+}
+
+/* Cash Section */
+.receipt-cash-section {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.change-amount {
+  font-weight: bold;
+  color: #e74c3c;
+  font-size: 12px;
+}
+
+/* Footer */
+.receipt-footer {
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed #ccc;
+  font-size: 11px;
+  font-style: italic;
+  color: #666;
+}
+
+.receipt-footer p {
+  margin: 4px 0;
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .receipt-container {
+    font-size: 11px;
+  }
+
+  .receipt-items-table {
+    font-size: 10px;
+  }
+
+  .receipt-items-table th {
+    font-size: 9px;
+  }
+
+  .info-row {
+    font-size: 10px;
+  }
+}
