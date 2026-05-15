@@ -1,4 +1,12 @@
 import React from "react";
+import SaleReceipt from "./SaleReceipt";
+
+const paymentHints = {
+  CASH: "Confirmación interna del cajero. La caja real queda pendiente de HU futura.",
+  CARD_MANUAL: "Registro manual de datáfono. No confirma un proveedor real automáticamente.",
+  NEQUI: "Flujo sandbox local. La confirmación real debe venir del proveedor externo.",
+  PSE: "Flujo sandbox local. La confirmación real debe venir del proveedor externo.",
+};
 
 const CheckoutPanel = ({
   cart,
@@ -168,7 +176,7 @@ const CheckoutPanel = ({
       )}
 
       <div className="payment-box">
-        <label>Metodo de pago</label>
+        <label>Método de pago</label>
         <div className="payment-switch">
           <button
             className={paymentMethod === "CASH" ? "active" : ""}
@@ -182,23 +190,25 @@ const CheckoutPanel = ({
             onClick={() => onPaymentMethodChange("CARD_MANUAL")}
             type="button"
           >
-            Tarjeta
+            Tarjeta manual
           </button>
           <button
             className={paymentMethod === "NEQUI" ? "active" : ""}
             onClick={() => onPaymentMethodChange("NEQUI")}
             type="button"
           >
-            Nequi
+            Nequi sandbox
           </button>
           <button
             className={paymentMethod === "PSE" ? "active" : ""}
             onClick={() => onPaymentMethodChange("PSE")}
             type="button"
           >
-            PSE
+            PSE sandbox
           </button>
         </div>
+
+        <div className="payment-hint">{paymentHints[paymentMethod]}</div>
 
         {paymentMethod === "CASH" && (
           <div className="cash-box">
@@ -222,7 +232,7 @@ const CheckoutPanel = ({
             className="pos-input"
             value={paymentReference}
             onChange={(event) => onSetPaymentReference(event.target.value)}
-            placeholder="Referencia o autorizacion del datafono"
+            placeholder="Referencia o autorización del datáfono"
           />
         )}
 
@@ -243,41 +253,7 @@ const CheckoutPanel = ({
         {processing ? "Procesando..." : "Cobrar y facturar"}
       </button>
 
-      {saleResult && (
-        <div className="receipt-box">
-          <div className="receipt-header">
-            <span>Venta completada</span>
-            <strong>#{saleResult.purchase.purchaseId}</strong>
-          </div>
-          <div>
-            <span>Pago</span>
-            <strong>
-              {saleResult.purchase.paymentMethod} - {saleResult.purchase.paymentStatus}
-            </strong>
-          </div>
-          {saleResult.purchase.cashReceived && (
-            <div>
-              <span>Efectivo</span>
-              <strong>
-                {formatPrice(saleResult.purchase.cashReceived)} recibido /{" "}
-                {formatPrice(saleResult.purchase.changeAmount)} cambio
-              </strong>
-            </div>
-          )}
-          <div>
-            <span>Factura</span>
-            <strong>
-              {saleResult.invoice?.invoiceNumber ||
-                saleResult.purchase.invoiceNumber ||
-                "Pendiente"}
-            </strong>
-          </div>
-          <div>
-            <span>Total</span>
-            <strong>{formatPrice(saleResult.purchase.total)}</strong>
-          </div>
-        </div>
-      )}
+      <SaleReceipt formatPrice={formatPrice} saleResult={saleResult} />
     </aside>
   );
 };

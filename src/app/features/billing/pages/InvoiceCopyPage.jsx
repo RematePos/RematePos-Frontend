@@ -153,24 +153,39 @@ export default function InvoiceCopyPage() {
           <div style={styles.itemsBox}>
             <strong>Productos comprados</strong>
             {Array.isArray(invoiceData.items) && invoiceData.items.length > 0 ? (
-              <div style={styles.itemsList}>
+              <div style={styles.itemsTable}>
+                <div style={styles.itemsHeaderRow}>
+                  <span>Producto</span>
+                  <span>Codigo</span>
+                  <span>Cant.</span>
+                  <span>Precio unitario</span>
+                  <span>Subtotal</span>
+                </div>
                 {invoiceData.items.map((item) => (
-                  <div key={`${item.productId}-${item.productName}`} style={styles.item}>
-                    <div style={styles.itemInfo}>
-                      <strong>{item.productName || "Producto"}</strong>
-                      <span style={styles.productCode}>Codigo #{item.productId}</span>
-                      <span>Cantidad: {item.quantity}</span>
-                    </div>
-                    <div style={styles.itemAmount}>
-                      <span>{formatPrice(item.unitPrice)} unidad</span>
-                      <strong>{formatPrice(item.lineTotal)}</strong>
-                    </div>
+                  <div
+                    key={`${item.productId}-${item.productName}`}
+                    style={styles.itemRow}
+                  >
+                    <strong>{item.productName || "Producto"}</strong>
+                    <span style={styles.productCode}>#{item.productId}</span>
+                    <span>{item.quantity}</span>
+                    <span>{formatPrice(item.unitPrice)}</span>
+                    <strong>{formatPrice(item.lineTotal)}</strong>
                   </div>
                 ))}
               </div>
             ) : (
               <p style={styles.noData}>No hay productos para mostrar.</p>
             )}
+          </div>
+
+          <div style={styles.returnStateBox}>
+            <strong>Estado de devoluciones</strong>
+            <p style={styles.returnStateText}>
+              La factura original se conserva como documento historico. La API
+              actual no entrega un resumen estructurado de devoluciones, returnId,
+              valor devuelto o saldo neto en esta copia.
+            </p>
           </div>
         </div>
       )}
@@ -314,31 +329,50 @@ const styles = {
   itemsBox: {
     display: "grid",
     gap: "10px",
+    overflowX: "auto",
   },
-  itemsList: {
+  itemsTable: {
     display: "grid",
-    gap: "8px",
+    gap: "6px",
+    minWidth: "720px",
   },
-  item: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "12px",
+  itemsHeaderRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(180px, 1.4fr) 90px 70px 140px 140px",
+    gap: "10px",
+    alignItems: "center",
+    color: "#64748b",
+    fontSize: "12px",
+    fontWeight: 900,
+    textTransform: "uppercase",
+  },
+  itemRow: {
+    display: "grid",
+    gridTemplateColumns: "minmax(180px, 1.4fr) 90px 70px 140px 140px",
+    gap: "10px",
+    alignItems: "center",
     padding: "12px",
     border: "1px solid #e2e8f0",
     borderRadius: "8px",
     background: "#ffffff",
   },
-  itemInfo: {
-    display: "grid",
-    gap: "4px",
-  },
   productCode: {
     color: "#2563eb",
-    fontSize: "12px",
     fontWeight: 800,
   },
-  itemAmount: {
-    textAlign: "right",
+  returnStateBox: {
+    display: "grid",
+    gap: "8px",
+    marginTop: "16px",
+    padding: "12px",
+    border: "1px solid #fde68a",
+    borderRadius: "8px",
+    background: "#fffbeb",
+  },
+  returnStateText: {
+    margin: 0,
+    color: "#92400e",
+    lineHeight: 1.45,
   },
   noData: {
     color: "#6b7280",
