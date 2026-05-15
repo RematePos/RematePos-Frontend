@@ -28,6 +28,14 @@ const getCategoryStatus = (status) => {
   };
 };
 
+const normalizeCategoryName = (value) =>
+  String(value || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
 const CategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -58,12 +66,12 @@ const CategoriesPage = () => {
   }, []);
 
   const filteredCategories = useMemo(() => {
-    const term = search.trim().toLowerCase();
+    const term = normalizeCategoryName(search);
     if (!term) return categories;
 
     return categories.filter((category) => {
-      const name = category?.name?.toLowerCase?.() || "";
-      const description = category?.description?.toLowerCase?.() || "";
+      const name = normalizeCategoryName(category?.name);
+      const description = normalizeCategoryName(category?.description);
       return name.includes(term) || description.includes(term);
     });
   }, [categories, search]);
@@ -112,6 +120,15 @@ const CategoriesPage = () => {
     if ((form.description || "").length > 500) {
       return "La descripción no puede superar 500 caracteres.";
     }
+
+    const normalizedName = normalizeCategoryName(name);
+    const duplicated = categories.some(
+      (category) =>
+        normalizeCategoryName(category?.name) === normalizedName &&
+        String(category?.id) !== String(form.id || "")
+    );
+
+    if (duplicated) return "Ya existe una categoria con ese nombre.";
 
     return "";
   };
@@ -199,6 +216,12 @@ const CategoriesPage = () => {
 
         {error && !isModalOpen && <div className="banner error">{error}</div>}
         {success && !isModalOpen && <div className="banner success">{success}</div>}
+
+        <div className="categories-warning">
+          La eliminacion directa de categorias no se expone en esta vista para
+          evitar errores por productos asociados. La desactivacion requiere
+          soporte backend en una HU posterior.
+        </div>
 
         <section className="categories-card">
           {loading ? (

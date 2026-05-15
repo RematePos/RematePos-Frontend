@@ -8,6 +8,14 @@ import {
   getCategoryOptions,
 } from "../services/productService";
 
+const normalizeCategoryName = (value) =>
+  String(value || "")
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+
 const NewProductPage = () => {
   const navigate = useNavigate();
 
@@ -94,6 +102,16 @@ const NewProductPage = () => {
       setQuickCategoryError("");
       setQuickCategorySuccess("");
       setError("");
+
+      const normalizedName = normalizeCategoryName(category.name);
+      const duplicated = categories.some(
+        (item) => normalizeCategoryName(item?.name) === normalizedName
+      );
+
+      if (duplicated) {
+        setQuickCategoryError("Ya existe una categoria con ese nombre.");
+        return false;
+      }
 
       const createdId = await createCategory(category);
       const nextCategories = await loadCategories();
