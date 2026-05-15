@@ -80,6 +80,18 @@
   color: #0f172a;
 }
 
+.category-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.category-field-header label {
+  margin-bottom: 0;
+}
+
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -177,6 +189,17 @@
   border: 1px solid #e2e8f0;
 }
 
+.btn-inline {
+  padding: 8px 12px;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.btn-inline:hover {
+  background: #dbeafe;
+}
+
 @media (max-width: 768px) {
   .new-product-header {
     flex-direction: column;
@@ -192,6 +215,11 @@
   }
 
   .form-actions {
+    flex-direction: column;
+  }
+
+  .category-field-header {
+    align-items: flex-start;
     flex-direction: column;
   }
 }

@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./NewProductPage.css";
-import { createProduct, getCategoryOptions } from "../services/productService";
+import QuickCategoryModal from "../../categories/components/QuickCategoryModal";
+import {
+  createCategory,
+  createProduct,
+  getCategoryOptions,
+} from "../services/productService";
 
 const NewProductPage = () => {
   const navigate = useNavigate();
@@ -20,26 +25,33 @@ const NewProductPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [quickCategoryOpen, setQuickCategoryOpen] = useState(false);
+  const [quickCategorySaving, setQuickCategorySaving] = useState(false);
+  const [quickCategoryError, setQuickCategoryError] = useState("");
+  const [quickCategorySuccess, setQuickCategorySuccess] = useState("");
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setCategoriesLoading(true);
+      setCategoriesError("");
+
+      const data = await getCategoryOptions();
+      const nextCategories = Array.isArray(data) ? data : [];
+      setCategories(nextCategories);
+      return nextCategories;
+    } catch (err) {
+      console.error(err);
+      setCategories([]);
+      setCategoriesError("No se pudieron cargar las categorías.");
+      return [];
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        setCategoriesError("");
-
-        const data = await getCategoryOptions();
-        setCategories(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error(err);
-        setCategories([]);
-        setCategoriesError("No se pudieron cargar las categorias.");
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-
     loadCategories();
-  }, []);
+  }, [loadCategories]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,8 +69,66 @@ const NewProductPage = () => {
       return "El precio debe ser mayor a 0.";
     if (form.stock === "" || Number(form.stock) < 0)
       return "El stock no puede ser negativo.";
-    if (!form.categoryId) return "La categoria es obligatoria.";
+    if (!form.categoryId) return "La categoría es obligatoria.";
     return "";
+  };
+
+  const getCategoryCreateError = (err) => {
+    const message = err?.message || "";
+    const normalizedMessage = message.toLowerCase();
+
+    if (
+      normalizedMessage.includes("duplicate") ||
+      normalizedMessage.includes("unique") ||
+      normalizedMessage.includes("existe")
+    ) {
+      return "Ya existe una categoría con ese nombre.";
+    }
+
+    return message || "No se pudo crear la categoría.";
+  };
+
+  const handleQuickCategoryCreate = async (category) => {
+    try {
+      setQuickCategorySaving(true);
+      setQuickCategoryError("");
+      setQuickCategorySuccess("");
+      setError("");
+
+      const createdId = await createCategory(category);
+      const nextCategories = await loadCategories();
+      const createdCategory =
+        nextCategories.find((item) => Number(item.id) === Number(createdId)) ||
+        nextCategories.find(
+          (item) =>
+            (item.name || "").trim().toLowerCase() ===
+            category.name.trim().toLowerCase()
+        );
+
+      if (createdCategory?.id) {
+        setForm((prev) => ({
+          ...prev,
+          categoryId: String(createdCategory.id),
+        }));
+      }
+
+      setQuickCategorySuccess("Categoría creada correctamente.");
+      setSuccess("Categoría creada correctamente.");
+
+      setTimeout(() => {
+        setQuickCategoryOpen(false);
+        setQuickCategorySuccess("");
+      }, 700);
+
+      return true;
+    } catch (err) {
+      console.error(err);
+      setQuickCategoryError(getCategoryCreateError(err));
+      setQuickCategorySuccess("");
+      return false;
+    } finally {
+      setQuickCategorySaving(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -140,7 +210,21 @@ const NewProductPage = () => {
               </div>
 
               <div className="form-group full-width">
-                <label htmlFor="categoryId">Categoria</label>
+                <div className="category-field-header">
+                  <label htmlFor="categoryId">Categoría</label>
+                  <button
+                    type="button"
+                    className="btn btn-inline"
+                    onClick={() => {
+                      setQuickCategoryError("");
+                      setQuickCategorySuccess("");
+                      setQuickCategoryOpen(true);
+                    }}
+                  >
+                    + Nueva categoría
+                  </button>
+                </div>
+
                 <select
                   id="categoryId"
                   name="categoryId"
@@ -150,8 +234,8 @@ const NewProductPage = () => {
                 >
                   <option value="">
                     {categoriesLoading
-                      ? "Cargando categorias..."
-                      : "Selecciona una categoria"}
+                      ? "Cargando categorías..."
+                      : "Selecciona una categoría"}
                   </option>
 
                   {categories.map((category) => (
@@ -167,7 +251,7 @@ const NewProductPage = () => {
 
                 {!categoriesLoading && !categoriesError && categories.length === 0 && (
                   <small className="form-hint">
-                    No hay categorias disponibles para crear productos.
+                    No hay categorías disponibles para crear productos.
                   </small>
                 )}
               </div>
@@ -214,6 +298,19 @@ const NewProductPage = () => {
           </form>
         </div>
       </div>
+
+      <QuickCategoryModal
+        isOpen={quickCategoryOpen}
+        saving={quickCategorySaving}
+        error={quickCategoryError}
+        success={quickCategorySuccess}
+        onClose={() => {
+          if (!quickCategorySaving) {
+            setQuickCategoryOpen(false);
+          }
+        }}
+        onCreate={handleQuickCategoryCreate}
+      />
     </div>
   );
 };
