@@ -1,4 +1,5 @@
 import React from "react";
+import SaleReceipt from "./SaleReceipt";
 
 const CheckoutPanel = ({
   cart,
@@ -243,41 +244,12 @@ const CheckoutPanel = ({
         {processing ? "Procesando..." : "Cobrar y facturar"}
       </button>
 
-      {saleResult && (
-        <div className="receipt-box">
-          <div className="receipt-header">
-            <span>Venta completada</span>
-            <strong>#{saleResult.purchase.purchaseId}</strong>
-          </div>
-          <div>
-            <span>Pago</span>
-            <strong>
-              {saleResult.purchase.paymentMethod} - {saleResult.purchase.paymentStatus}
-            </strong>
-          </div>
-          {saleResult.purchase.cashReceived && (
-            <div>
-              <span>Efectivo</span>
-              <strong>
-                {formatPrice(saleResult.purchase.cashReceived)} recibido /{" "}
-                {formatPrice(saleResult.purchase.changeAmount)} cambio
-              </strong>
-            </div>
-          )}
-          <div>
-            <span>Factura</span>
-            <strong>
-              {saleResult.invoice?.invoiceNumber ||
-                saleResult.purchase.invoiceNumber ||
-                "Pendiente"}
-            </strong>
-          </div>
-          <div>
-            <span>Total</span>
-            <strong>{formatPrice(saleResult.purchase.total)}</strong>
-          </div>
-        </div>
-      )}
+      <SaleReceipt
+        saleResult={saleResult}
+        customer={customer}
+        cart={cart}
+        formatPrice={formatPrice}
+      />
     </aside>
   );
 };
