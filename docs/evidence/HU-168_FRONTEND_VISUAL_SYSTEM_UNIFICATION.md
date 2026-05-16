@@ -223,3 +223,9 @@ If the visual system proves too large for one branch, split into smaller clean H
 - Preserve this branch as the frontend visual baseline for the public MVP demo.
 - Move next to backend/API demo stabilization, then deploy, then security hardening.
 - Keep the current visual system as the reference for subsequent frontend work.
+
+### Commit ledger
+- `00d21ff` - foundation: visual design system and evidence baseline.
+- `974e03f` - main views: categories, products, sales, billing, and account styling unification.
+- `048b49f` - premium auth entry experience.
+- The branch is ready to be preserved as the visual laboratory baseline for HU-168.
