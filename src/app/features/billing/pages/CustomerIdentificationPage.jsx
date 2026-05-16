@@ -108,7 +108,7 @@ export default function CustomerIdentificationPage() {
       return;
     }
 
-    navigate("/billing/facturar");
+    navigate("/sales");
   };
 
   return (
