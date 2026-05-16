@@ -1,9 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/AuthService";
+import "./LoginPage.css";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add("auth-route");
+    const header = document.querySelector('#root > header') || document.querySelector('header');
+    const previousDisplay = header ? header.style.display : "";
+
+    if (header) {
+      header.style.display = "none";
+    }
+
+    return () => {
+      if (header) {
+        header.style.display = previousDisplay;
+      }
+      document.body.classList.remove("auth-route");
+    };
+  }, []);
 
   const [form, setForm] = useState({
     username: "",
@@ -36,72 +54,88 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.container}>
-        <div style={styles.leftPanel}>
-          <div style={styles.brandBadge}>rematePOS</div>
-          <h1 style={styles.leftTitle}>Bienvenido de nuevo</h1>
-          <p style={styles.leftText}>
-            Inicia sesión para continuar con la gestión del sistema de ventas,
-            inventario y facturación.
-          </p>
-
-          <div style={styles.featureList}>
-            <div style={styles.featureItem}>🔐 Acceso seguro</div>
-            <div style={styles.featureItem}>📦 Control de inventario</div>
-            <div style={styles.featureItem}>🧾 Facturación centralizada</div>
+    <div className="auth-page auth-page--login">
+      <div className="auth-shell">
+        <section className="auth-panel auth-panel-hero">
+          <div className="auth-brand">
+            <span className="auth-brand-mark">R</span>
+            <div>
+              <strong>rematePOS</strong>
+              <span>SaaS visual lab</span>
+            </div>
           </div>
-        </div>
 
-        <div style={styles.card}>
-          <div style={styles.header}>
-            <h2 style={styles.title}>Iniciar sesión</h2>
-            <p style={styles.subtitle}>
-              Ingresa tus credenciales para acceder a rematePOS.
+          <div className="auth-hero-copy">
+            <p className="auth-eyebrow">Acceso premium</p>
+            <h1>Bienvenido de nuevo</h1>
+            <p>
+              Entra a un entorno POS con foco, velocidad y una experiencia visual
+              construida para vender.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Usuario</label>
+          <ul className="auth-benefits">
+            <li>Acceso seguro</li>
+            <li>Control de inventario</li>
+            <li>Facturación centralizada</li>
+            <li>Ventas rápidas</li>
+          </ul>
+        </section>
+
+        <section className="auth-panel auth-panel-form">
+          <div className="auth-form-head">
+            <p className="auth-eyebrow">Inicia sesión</p>
+            <h2>Iniciar sesión</h2>
+            <p>Ingresa tus credenciales para acceder a rematePOS.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="login-username">
+                Usuario
+              </label>
               <input
+                id="login-username"
                 type="text"
                 name="username"
                 placeholder="Escribe tu usuario"
                 value={form.username}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                className="auth-input"
+                autoComplete="username"
               />
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Contraseña</label>
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="login-password">
+                Contraseña
+              </label>
               <input
+                id="login-password"
                 type="password"
                 name="password"
                 placeholder="Escribe tu contraseña"
                 value={form.password}
                 onChange={handleChange}
                 required
-                style={styles.input}
+                className="auth-input"
+                autoComplete="current-password"
               />
             </div>
 
-            {error && <div style={styles.error}>{error}</div>}
+            {error && <div className="auth-alert auth-alert-error">{error}</div>}
 
-            <button type="submit" disabled={loading} style={styles.button}>
+            <button type="submit" disabled={loading} className="auth-button auth-button-primary">
               {loading ? "Ingresando..." : "Entrar"}
             </button>
           </form>
 
-          <div style={styles.footer}>
-            <span style={styles.footerText}>¿No tienes cuenta?</span>
-            <Link to="/register" style={styles.link}>
-              Regístrate aquí
-            </Link>
+          <div className="auth-footer">
+            <span>¿No tienes cuenta?</span>
+            <Link to="/register">Regístrate aquí</Link>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -241,3 +275,5 @@ const styles = {
     fontWeight: "700",
   },
 };
+
+void styles;
