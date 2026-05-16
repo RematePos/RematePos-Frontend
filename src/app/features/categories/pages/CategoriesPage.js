@@ -12,6 +12,8 @@ const defaultForm = {
   description: "",
 };
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
 const getCategoryStatus = (status) => {
   const normalizedStatus = (status || "ACTIVE").toUpperCase();
 
@@ -35,6 +37,8 @@ const CategoriesPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
 
@@ -67,6 +71,28 @@ const CategoriesPage = () => {
       return name.includes(term) || description.includes(term);
     });
   }, [categories, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
+
+  const paginatedCategories = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredCategories.slice(start, end);
+  }, [currentPage, filteredCategories, pageSize]);
+
+  const visibleFrom =
+    filteredCategories.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const visibleTo = Math.min(currentPage * pageSize, filteredCategories.length);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, pageSize]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const resetForm = () => {
     setForm(defaultForm);
@@ -163,50 +189,49 @@ const CategoriesPage = () => {
   };
 
   return (
-    <div className="categories-page">
-      <div className="categories-container">
-        <header className="categories-header">
+    <div className="categories-page rp-page rp-fade-in">
+      <div className="categories-container rp-page-shell">
+        <header className="categories-header rp-page-header">
           <div>
-            <span className="categories-badge">Inventario</span>
-            <h1>Gestión de categorías</h1>
-            <p>Administra categorías activas para productos del sistema POS.</p>
+            <span className="categories-badge rp-badge rp-badge-info">Inventario</span>
+            <h1 className="rp-page-title">Gestión de categorías</h1>
+            <p className="rp-page-subtitle">Administra categorías activas para productos del sistema POS.</p>
           </div>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={openCreateModal}
-          >
+          <button type="button" className="btn btn-primary rp-btn rp-btn-primary" onClick={openCreateModal}>
             + Nueva categoría
           </button>
         </header>
 
-        <section className="categories-toolbar">
+        <section className="categories-toolbar rp-card rp-table-toolbar">
           <input
             type="text"
             placeholder="Buscar categoría por nombre o descripción..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            className="rp-input rp-search"
           />
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={loadCategories}
-            disabled={loading}
-          >
+          <select className="rp-page-size" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+            {PAGE_SIZE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option} registros
+              </option>
+            ))}
+          </select>
+          <button type="button" className="btn btn-secondary rp-btn rp-btn-secondary" onClick={loadCategories} disabled={loading}>
             {loading ? "Actualizando..." : "Actualizar"}
           </button>
         </section>
 
-        {error && !isModalOpen && <div className="banner error">{error}</div>}
-        {success && !isModalOpen && <div className="banner success">{success}</div>}
+        {error && !isModalOpen && <div className="banner error rp-error-state">{error}</div>}
+        {success && !isModalOpen && <div className="banner success rp-empty-state">{success}</div>}
 
-        <section className="categories-card">
+        <section className="categories-card rp-table-shell">
           {loading ? (
-            <div className="state-box">Cargando categorías...</div>
+            <div className="state-box rp-loading-state">Cargando categorías...</div>
           ) : filteredCategories.length === 0 ? (
-            <div className="state-box">No hay categorías para mostrar.</div>
+            <div className="state-box rp-empty-state">No se encontraron registros.</div>
           ) : (
-            <table className="categories-table">
+            <table className="categories-table rp-table">
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -216,7 +241,7 @@ const CategoriesPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCategories.map((category) => {
+                {paginatedCategories.map((category) => {
                   const status = getCategoryStatus(category.status);
 
                   return (
@@ -241,6 +266,23 @@ const CategoriesPage = () => {
               </tbody>
             </table>
           )}
+
+          <div className="rp-pagination">
+            <span className="rp-pagination-info">
+              Mostrando {visibleFrom}-{visibleTo} de {filteredCategories.length} registros
+            </span>
+
+            <span className="rp-pagination-info">Página {currentPage} de {totalPages}</span>
+
+            <div className="rp-inline-actions">
+              <button type="button" className="btn btn-secondary rp-btn rp-btn-secondary" onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                Anterior
+              </button>
+              <button type="button" className="btn btn-primary rp-btn rp-btn-primary" onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                Siguiente
+              </button>
+            </div>
+          </div>
         </section>
       </div>
 
