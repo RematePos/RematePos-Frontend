@@ -16,17 +16,6 @@ import {
   registerPurchasePayment,
 } from "../services/purchaseService";
 
-const FINAL_CONSUMER = {
-  documentType: "CC",
-  documentNumber: "222222222222",
-  firstName: "Consumidor",
-  lastName: "Final",
-  email: "consumidor.final@rematepos.local",
-  phone: "",
-  address: "",
-  city: "Neiva",
-};
-
 const initialCustomerForm = {
   documentType: "CC",
   documentNumber: "",
@@ -159,26 +148,11 @@ const SalesPage = () => {
 
   const handleFinalConsumer = async () => {
     clearStatus();
-
     try {
-      const existing = await findCustomerByDocument(
-        FINAL_CONSUMER.documentNumber,
-        FINAL_CONSUMER.documentType
-      );
-
-      if (existing) {
-        selectCustomer(existing);
-        return;
-      }
-
-      await createCustomer(FINAL_CONSUMER);
-      const created = await findCustomerByDocument(
-        FINAL_CONSUMER.documentNumber,
-        FINAL_CONSUMER.documentType
-      );
-      selectCustomer(created || FINAL_CONSUMER);
+      const customer = await findCustomerByDocument("222222222222", "CC");
+      selectCustomer(customer);
     } catch (err) {
-      setError(err.message || "No fue posible seleccionar consumidor final.");
+      setError("No fue posible seleccionar Consumidor Final. Verifica que exista el cliente 222222222222.");
     }
   };
 
