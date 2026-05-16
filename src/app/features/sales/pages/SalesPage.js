@@ -110,6 +110,32 @@ const SalesPage = () => {
     return Math.max(received - totals.total, 0);
   }, [cashReceived, paymentMethod, totals.total]);
 
+  const checkoutAlert = useMemo(() => {
+    if (!error) return null;
+
+    const warningMessages = new Set([
+      "Selecciona o registra un cliente antes de vender.",
+      "Selecciona un cliente antes de finalizar la venta.",
+      "Agrega al menos un producto al carrito.",
+      "Ingresa el efectivo recibido para calcular el cambio.",
+      "El efectivo recibido debe cubrir el total de la venta.",
+    ]);
+
+    if (warningMessages.has(error)) {
+      return {
+        tone: "warning",
+        title: "Accion requerida",
+        message: error,
+      };
+    }
+
+    return {
+      tone: "danger",
+      title: "No fue posible continuar",
+      message: error,
+    };
+  }, [error]);
+
   const formatPrice = (value) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -310,6 +336,10 @@ const SalesPage = () => {
     }
 
     const received = Number(cashReceived || 0);
+    if (!Number.isFinite(received) || received <= 0) {
+      throw new Error("Ingresa el efectivo recibido para calcular el cambio.");
+    }
+
     if (!Number.isFinite(received) || received < totals.total) {
       throw new Error("El efectivo recibido debe cubrir el total de la venta.");
     }
@@ -370,7 +400,7 @@ const SalesPage = () => {
     }
 
     if (!cart.length) {
-      setError("Agrega productos al carrito.");
+      setError("Agrega al menos un producto al carrito.");
       return;
     }
 
@@ -439,10 +469,10 @@ const SalesPage = () => {
           </div>
         </div>
 
-        {(message || error) && (
-          <div className={`sales-notice ${error ? "sales-notice-error" : "sales-notice-success"}`}>
-            {error || message}
-          </div>
+        {message && <div className="sales-notice sales-notice-success">{message}</div>}
+
+        {error && checkoutAlert?.tone === "danger" && (
+          <div className="sales-notice sales-notice-error">{error}</div>
         )}
 
         <div className="sales-layout">
@@ -468,6 +498,7 @@ const SalesPage = () => {
           <CheckoutPanel
             cart={cart}
             cashReceived={cashReceived}
+            checkoutAlert={checkoutAlert}
             changePreview={changePreview}
             customer={customer}
             customerForm={customerForm}

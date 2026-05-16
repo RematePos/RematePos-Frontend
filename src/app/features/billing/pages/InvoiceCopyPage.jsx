@@ -3,6 +3,7 @@ import { getInvoiceCopy, getRecentInvoices } from "../services/billingService";
 
 export default function InvoiceCopyPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [recentQuery, setRecentQuery] = useState("");
   const [invoiceData, setInvoiceData] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
   const [recentPageSize, setRecentPageSize] = useState(10);
@@ -21,7 +22,7 @@ export default function InvoiceCopyPage() {
       try {
         const data = await getRecentInvoices(50);
         if (isMounted) {
-          setRecentInvoices(data);
+          setRecentInvoices(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         if (isMounted) {
@@ -44,27 +45,46 @@ export default function InvoiceCopyPage() {
     };
   }, []);
 
+  const filteredRecentInvoices = useMemo(() => {
+    const term = recentQuery.trim().toLowerCase();
+    if (!term) return recentInvoices;
+
+    return recentInvoices.filter((invoice) => {
+      const invoiceCode = String(invoice.invoiceNumber || "").toLowerCase();
+      const customerDocument = String(invoice.customerDocumentNumber || "").toLowerCase();
+      const customerName = String(invoice.customerFullName || "").toLowerCase();
+
+      return (
+        invoiceCode.includes(term) ||
+        customerDocument.includes(term) ||
+        customerName.includes(term)
+      );
+    });
+  }, [recentInvoices, recentQuery]);
+
   const totalRecentPages = Math.max(
     1,
-    Math.ceil(recentInvoices.length / recentPageSize)
+    Math.ceil(filteredRecentInvoices.length / recentPageSize)
   );
 
   const paginatedRecentInvoices = useMemo(() => {
     const start = (recentCurrentPage - 1) * recentPageSize;
     const end = start + recentPageSize;
-    return recentInvoices.slice(start, end);
-  }, [recentCurrentPage, recentInvoices, recentPageSize]);
+    return filteredRecentInvoices.slice(start, end);
+  }, [filteredRecentInvoices, recentCurrentPage, recentPageSize]);
 
   const recentVisibleFrom =
-    recentInvoices.length === 0 ? 0 : (recentCurrentPage - 1) * recentPageSize + 1;
+    filteredRecentInvoices.length === 0
+      ? 0
+      : (recentCurrentPage - 1) * recentPageSize + 1;
   const recentVisibleTo = Math.min(
     recentCurrentPage * recentPageSize,
-    recentInvoices.length
+    filteredRecentInvoices.length
   );
 
   useEffect(() => {
     setRecentCurrentPage(1);
-  }, [recentPageSize]);
+  }, [recentPageSize, recentQuery]);
 
   useEffect(() => {
     if (recentCurrentPage > totalRecentPages) {
@@ -218,76 +238,89 @@ export default function InvoiceCopyPage() {
           {loadingRecent && <span style={styles.recentHint}>Cargando...</span>}
         </div>
 
+        <input
+          type="text"
+          value={recentQuery}
+          onChange={(event) => setRecentQuery(event.target.value)}
+          placeholder="Buscar por factura, documento o cliente..."
+          style={styles.recentSearchInput}
+        />
+
         {recentInvoices.length > 0 ? (
-          <>
-            <div style={styles.recentGrid}>
-              {paginatedRecentInvoices.map((invoice) => (
-                <button
-                  key={invoice.invoiceId || invoice.invoiceNumber}
-                  type="button"
-                  style={styles.recentCard}
-                  onClick={() => {
-                    setInvoiceNumber(invoice.invoiceNumber);
-                    setInvoiceData(invoice);
-                    setError("");
-                  }}
-                >
-                  <span style={styles.recentNumber}>{invoice.invoiceNumber}</span>
-                  <span style={styles.recentCustomer}>
-                    {invoice.customerFullName || "Cliente no identificado"}
-                  </span>
-                  <span style={styles.recentMeta}>
-                    Compra #{invoice.purchaseId} - {formatPrice(invoice.total)}
-                  </span>
-                  <span style={styles.recentMeta}>
-                    Productos: {Array.isArray(invoice.items) ? invoice.items.length : 0}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div style={styles.recentPagination}>
-              <span style={styles.recentHint}>
-                Mostrando {recentVisibleFrom}-{recentVisibleTo} de {recentInvoices.length} registros
-              </span>
-              <span style={styles.recentHint}>
-                Página {recentCurrentPage} de {totalRecentPages}
-              </span>
-
-              <div style={styles.recentPaginationActions}>
-                <select
-                  value={recentPageSize}
-                  onChange={(event) => setRecentPageSize(Number(event.target.value))}
-                  style={styles.pageSizeSelect}
-                >
-                  {[10, 20, 50].map((option) => (
-                    <option key={option} value={option}>
-                      {option} registros
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  type="button"
-                  style={styles.pageButton}
-                  onClick={() => setRecentCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={recentCurrentPage === 1}
-                >
-                  Anterior
-                </button>
-
-                <button
-                  type="button"
-                  style={styles.pageButtonPrimary}
-                  onClick={() =>
-                    setRecentCurrentPage((prev) => Math.min(prev + 1, totalRecentPages))
-                  }
-                  disabled={recentCurrentPage === totalRecentPages}
-                >
-                  Siguiente
-                </button>
+          filteredRecentInvoices.length > 0 ? (
+            <>
+              <div style={styles.recentGrid}>
+                {paginatedRecentInvoices.map((invoice) => (
+                  <button
+                    key={invoice.invoiceId || invoice.invoiceNumber}
+                    type="button"
+                    style={styles.recentCard}
+                    onClick={() => {
+                      setInvoiceNumber(invoice.invoiceNumber);
+                      setInvoiceData(invoice);
+                      setError("");
+                    }}
+                  >
+                    <span style={styles.recentNumber}>{invoice.invoiceNumber}</span>
+                    <span style={styles.recentCustomer}>
+                      {invoice.customerFullName || "Cliente no identificado"}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Compra #{invoice.purchaseId} - {formatPrice(invoice.total)}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Productos: {Array.isArray(invoice.items) ? invoice.items.length : 0}
+                    </span>
+                  </button>
+                ))}
               </div>
-            </div>
-          </>
+
+              <div style={styles.recentPagination}>
+                <span style={styles.recentHint}>
+                  Mostrando {recentVisibleFrom}-{recentVisibleTo} de {filteredRecentInvoices.length} registros
+                </span>
+                <span style={styles.recentHint}>
+                  Página {recentCurrentPage} de {totalRecentPages}
+                </span>
+
+                <div style={styles.recentPaginationActions}>
+                  <select
+                    value={recentPageSize}
+                    onChange={(event) => setRecentPageSize(Number(event.target.value))}
+                    style={styles.pageSizeSelect}
+                  >
+                    {[10, 20, 50].map((option) => (
+                      <option key={option} value={option}>
+                        {option} registros
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    style={styles.pageButton}
+                    onClick={() => setRecentCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={recentCurrentPage === 1}
+                  >
+                    Anterior
+                  </button>
+
+                  <button
+                    type="button"
+                    style={styles.pageButtonPrimary}
+                    onClick={() =>
+                      setRecentCurrentPage((prev) => Math.min(prev + 1, totalRecentPages))
+                    }
+                    disabled={recentCurrentPage === totalRecentPages}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p style={styles.noData}>No se encontraron facturas con ese criterio.</p>
+          )
         ) : (
           !loadingRecent && (
             <p style={recentError ? styles.recentError : styles.noData}>
@@ -501,6 +534,19 @@ const styles = {
     marginBottom: "16px",
     paddingBottom: "12px",
     borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
+  },
+  recentSearchInput: {
+    width: "100%",
+    marginBottom: "14px",
+    minHeight: "42px",
+    padding: "10px 14px",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "10px",
+    background: "rgba(15, 23, 42, 0.8)",
+    color: "#f8fafc",
+    fontSize: "0.9rem",
+    letterSpacing: "0.2px",
+    outline: "none",
   },
   recentTitle: {
     margin: 0,

@@ -132,6 +132,30 @@
   align-items: start;
 }
 
+.sales-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--rp-space-4);
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.16);
+  animation: fadeInUp 220ms ease-out;
+}
+
+.sales-notice-success {
+  color: #bbf7d0;
+  border-color: rgba(74, 222, 128, 0.28);
+  background: linear-gradient(180deg, rgba(22, 163, 74, 0.2) 0%, rgba(22, 163, 74, 0.14) 100%);
+}
+
+.sales-notice-error {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: linear-gradient(180deg, rgba(185, 28, 28, 0.2) 0%, rgba(185, 28, 28, 0.14) 100%);
+}
+
 .pos-panel {
   min-height: 320px;
   padding: var(--rp-space-6);
@@ -438,6 +462,64 @@
   top: 92px;
   display: grid;
   gap: 12px;
+}
+
+.checkout-alert {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  animation: fadeInUp 220ms ease-out;
+}
+
+.checkout-alert-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.checkout-alert-content {
+  display: grid;
+  gap: 4px;
+}
+
+.checkout-alert-content strong {
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.checkout-alert-content span {
+  color: #f8fafc;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.checkout-alert-warning {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: linear-gradient(180deg, rgba(146, 64, 14, 0.24) 0%, rgba(120, 53, 15, 0.18) 100%);
+}
+
+.checkout-alert-warning .checkout-alert-icon {
+  color: #fde68a;
+  background: rgba(217, 119, 6, 0.36);
+}
+
+.checkout-alert-danger {
+  border-color: rgba(248, 113, 113, 0.35);
+  background: linear-gradient(180deg, rgba(153, 27, 27, 0.24) 0%, rgba(127, 29, 29, 0.18) 100%);
+}
+
+.checkout-alert-danger .checkout-alert-icon {
+  color: #fecaca;
+  background: rgba(220, 38, 38, 0.32);
 }
 
 .customer-search,

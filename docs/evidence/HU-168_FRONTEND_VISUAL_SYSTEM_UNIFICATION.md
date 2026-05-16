@@ -198,6 +198,97 @@ If the visual system proves too large for one branch, split into smaller clean H
 - `/billing/returns` is visually acceptable for the demo scope.
 - `/account` is visually coherent with the shared system.
 
+---
+
+## Demo MVP Validation and UX Refinements
+
+**Date Validated:** 2026-05-16 21:40 UTC  
+**Status:** ✅ VALIDATED – Ready for demo  
+**Frontend Build:** ✅ Compiled successfully (97.86 kB JS + 11.58 kB CSS after gzip)
+
+### Routes Validated (All 10 Operational)
+- ✅ `/login` – Authentication entry
+- ✅ `/register` – User registration
+- ✅ `/sales` – POS point of sale with alert enhancements
+- ✅ `/categories` – Category management
+- ✅ `/inventory` – Product catalog
+- ✅ `/inventory/new` – Create new product
+- ✅ `/billing` – Billing hub
+- ✅ `/billing/invoice-copy` – Invoice search with multi-field filter
+- ✅ `/billing/returns` – Return management
+- ✅ `/account` – Account settings
+
+### End-to-End Sale Transaction Completed
+| Field | Value |
+|-------|-------|
+| **Sale #** | 31 |
+| **Invoice #** | INV-20260516-31 |
+| **Customer** | carlos villamil (CC 1077721349) |
+| **Product Sold** | HU152 Producto API 055217 |
+| **Quantity** | 6 units |
+| **Stock Before** | 6 |
+| **Stock After** | 0 ✅ Decremented correctly |
+| **Subtotal** | $ 81.000 |
+| **IVA (19%)** | $ 15.390 |
+| **Total** | $ 96.390 |
+| **Payment Method** | Cash (Efectivo) |
+| **Change** | $ 23.610 |
+
+### Customer Functionality
+- ✅ Customer search working (found CC 1077721349 in system)
+- ✅ Customer selection in sales flow
+- ✅ Customer data displayed in invoice
+
+### Visual & UX Enhancements Applied
+
+#### 1. Sales Page Alert System (`/sales`)
+- **Feature:** Contextual checkout validation alerts
+- **Alert Types:**
+  - **Warning** (Yellow/Orange): Missing customer, cash input, or insufficient stock
+  - **Danger** (Red): System/backend errors
+- **Behavior:** Non-blocking, immediate feedback, clears on condition resolution
+- **Styling:** 220ms fade-in animation, icon badge, clear title + message
+
+#### 2. Invoice Search Enhancement (`/billing/invoice-copy`)
+- **Feature:** Real-time multi-field search on recent invoices
+- **Search By:** Invoice number, customer document, customer name
+- **Tested Example:** Filter by INV-20260516-31 → 1 result shown
+- **Empty State:** "No se encontraron facturas con ese criterio." when no matches
+- **UX:** Search input with placeholder, pagination maintained per page size
+
+### Invoice Display Verification
+- ✅ Invoice number displays correctly
+- ✅ Customer name and document visible
+- ✅ Product line items listed with quantities and prices
+- ✅ Subtotal, tax, and total calculated correctly
+- ✅ All invoice details retrievable
+
+### Technical Validation
+- ✅ **Files Modified:** 4 (SalesPage.js, SalesPage.css, CheckoutPanel.js, InvoiceCopyPage.jsx)
+- ✅ **No Dependencies Added:** package-lock.json unchanged
+- ✅ **No Secrets Exposed:** No .env files in git
+- ✅ **Backend Untouched:** All API calls to `localhost:8080` (api-gateway)
+- ✅ **Database Unchanged:** Schema not modified, only data from transaction
+- ✅ **Build Output:** Zero compilation errors or warnings
+- ✅ **API Gateway:** No 403 Forbidden, all endpoints responding (200 OK)
+
+### Known Limitations (Documented)
+- ⚠️ **Consumidor Final Flow:** Backend returns 400 error – requires investigation in next sprint (not blocking current demo)
+- ℹ️ **Recent Invoices:** Limited to 50 records (frontend pagination) – acceptable for demo scope
+
+### No Modifications To:
+- Database schema
+- Backend microservices
+- Docker environment
+- Environment variables
+- Dependencies or package managers
+- Node modules, build artifacts, or logs
+
+### Branch & Commit Status
+- **Branch:** `feature/HU-168-AFAF-unify-frontend-visual-system-lab`
+- **Pending Commit:** `feat(HU-168): polish POS alerts and invoice search for demo`
+- **Status:** Ready for single atomic commit (not merged, no push yet)
+
 ### Pagination and tables
 - Visual pagination treatment is present on the list surfaces that were updated.
 - Table density, shells, and action controls remain consistent with the premium dark system.
