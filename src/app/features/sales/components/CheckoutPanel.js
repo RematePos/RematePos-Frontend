@@ -4,6 +4,7 @@ import SaleReceipt from "./SaleReceipt";
 const CheckoutPanel = ({
   cart,
   cashReceived,
+  checkoutAlert,
   changePreview,
   customer,
   customerForm,
@@ -235,9 +236,25 @@ const CheckoutPanel = ({
         />
       </div>
 
+      {checkoutAlert?.message && (
+        <div
+          className={`checkout-alert checkout-alert-${checkoutAlert.tone || "warning"}`}
+          role="alert"
+          aria-live="assertive"
+        >
+          <span className="checkout-alert-icon" aria-hidden="true">
+            !
+          </span>
+          <div className="checkout-alert-content">
+            <strong>{checkoutAlert.title || "Revisa antes de continuar"}</strong>
+            <span>{checkoutAlert.message}</span>
+          </div>
+        </div>
+      )}
+
       <button
         className="pos-checkout-button"
-        disabled={processing || !customer || !cart.length}
+        disabled={processing}
         onClick={onProcessSale}
         type="button"
       >

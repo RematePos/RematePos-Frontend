@@ -16,17 +16,6 @@ import {
   registerPurchasePayment,
 } from "../services/purchaseService";
 
-const FINAL_CONSUMER = {
-  documentType: "CC",
-  documentNumber: "222222222222",
-  firstName: "Consumidor",
-  lastName: "Final",
-  email: "consumidor.final@rematepos.local",
-  phone: "",
-  address: "",
-  city: "Neiva",
-};
-
 const initialCustomerForm = {
   documentType: "CC",
   documentNumber: "",
@@ -110,6 +99,32 @@ const SalesPage = () => {
     return Math.max(received - totals.total, 0);
   }, [cashReceived, paymentMethod, totals.total]);
 
+  const checkoutAlert = useMemo(() => {
+    if (!error) return null;
+
+    const warningMessages = new Set([
+      "Selecciona o registra un cliente antes de vender.",
+      "Selecciona un cliente antes de finalizar la venta.",
+      "Agrega al menos un producto al carrito.",
+      "Ingresa el efectivo recibido para calcular el cambio.",
+      "El efectivo recibido debe cubrir el total de la venta.",
+    ]);
+
+    if (warningMessages.has(error)) {
+      return {
+        tone: "warning",
+        title: "Accion requerida",
+        message: error,
+      };
+    }
+
+    return {
+      tone: "danger",
+      title: "No fue posible continuar",
+      message: error,
+    };
+  }, [error]);
+
   const formatPrice = (value) => {
     return new Intl.NumberFormat("es-CO", {
       style: "currency",
@@ -133,26 +148,11 @@ const SalesPage = () => {
 
   const handleFinalConsumer = async () => {
     clearStatus();
-
     try {
-      const existing = await findCustomerByDocument(
-        FINAL_CONSUMER.documentNumber,
-        FINAL_CONSUMER.documentType
-      );
-
-      if (existing) {
-        selectCustomer(existing);
-        return;
-      }
-
-      await createCustomer(FINAL_CONSUMER);
-      const created = await findCustomerByDocument(
-        FINAL_CONSUMER.documentNumber,
-        FINAL_CONSUMER.documentType
-      );
-      selectCustomer(created || FINAL_CONSUMER);
+      const customer = await findCustomerByDocument("222222222222", "CC");
+      selectCustomer(customer);
     } catch (err) {
-      setError(err.message || "No fue posible seleccionar consumidor final.");
+      setError("No fue posible seleccionar Consumidor Final. Verifica que exista el cliente 222222222222.");
     }
   };
 
@@ -310,6 +310,10 @@ const SalesPage = () => {
     }
 
     const received = Number(cashReceived || 0);
+    if (!Number.isFinite(received) || received <= 0) {
+      throw new Error("Ingresa el efectivo recibido para calcular el cambio.");
+    }
+
     if (!Number.isFinite(received) || received < totals.total) {
       throw new Error("El efectivo recibido debe cubrir el total de la venta.");
     }
@@ -370,7 +374,7 @@ const SalesPage = () => {
     }
 
     if (!cart.length) {
-      setError("Agrega productos al carrito.");
+      setError("Agrega al menos un producto al carrito.");
       return;
     }
 
@@ -439,10 +443,10 @@ const SalesPage = () => {
           </div>
         </div>
 
-        {(message || error) && (
-          <div className={`sales-notice ${error ? "sales-notice-error" : "sales-notice-success"}`}>
-            {error || message}
-          </div>
+        {message && <div className="sales-notice sales-notice-success">{message}</div>}
+
+        {error && checkoutAlert?.tone === "danger" && (
+          <div className="sales-notice sales-notice-error">{error}</div>
         )}
 
         <div className="sales-layout">
@@ -468,6 +472,7 @@ const SalesPage = () => {
           <CheckoutPanel
             cart={cart}
             cashReceived={cashReceived}
+            checkoutAlert={checkoutAlert}
             changePreview={changePreview}
             customer={customer}
             customerForm={customerForm}

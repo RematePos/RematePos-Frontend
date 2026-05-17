@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getInvoiceCopy, getRecentInvoices } from "../services/billingService";
 
 export default function InvoiceCopyPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [recentQuery, setRecentQuery] = useState("");
   const [invoiceData, setInvoiceData] = useState(null);
   const [recentInvoices, setRecentInvoices] = useState([]);
+  const [recentPageSize, setRecentPageSize] = useState(10);
+  const [recentCurrentPage, setRecentCurrentPage] = useState(1);
   const [error, setError] = useState("");
   const [recentError, setRecentError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,9 +20,9 @@ export default function InvoiceCopyPage() {
       setLoadingRecent(true);
       setRecentError("");
       try {
-        const data = await getRecentInvoices(8);
+        const data = await getRecentInvoices(50);
         if (isMounted) {
-          setRecentInvoices(data);
+          setRecentInvoices(Array.isArray(data) ? data : []);
         }
       } catch (err) {
         if (isMounted) {
@@ -41,6 +44,53 @@ export default function InvoiceCopyPage() {
       isMounted = false;
     };
   }, []);
+
+  const filteredRecentInvoices = useMemo(() => {
+    const term = recentQuery.trim().toLowerCase();
+    if (!term) return recentInvoices;
+
+    return recentInvoices.filter((invoice) => {
+      const invoiceCode = String(invoice.invoiceNumber || "").toLowerCase();
+      const customerDocument = String(invoice.customerDocumentNumber || "").toLowerCase();
+      const customerName = String(invoice.customerFullName || "").toLowerCase();
+
+      return (
+        invoiceCode.includes(term) ||
+        customerDocument.includes(term) ||
+        customerName.includes(term)
+      );
+    });
+  }, [recentInvoices, recentQuery]);
+
+  const totalRecentPages = Math.max(
+    1,
+    Math.ceil(filteredRecentInvoices.length / recentPageSize)
+  );
+
+  const paginatedRecentInvoices = useMemo(() => {
+    const start = (recentCurrentPage - 1) * recentPageSize;
+    const end = start + recentPageSize;
+    return filteredRecentInvoices.slice(start, end);
+  }, [filteredRecentInvoices, recentCurrentPage, recentPageSize]);
+
+  const recentVisibleFrom =
+    filteredRecentInvoices.length === 0
+      ? 0
+      : (recentCurrentPage - 1) * recentPageSize + 1;
+  const recentVisibleTo = Math.min(
+    recentCurrentPage * recentPageSize,
+    filteredRecentInvoices.length
+  );
+
+  useEffect(() => {
+    setRecentCurrentPage(1);
+  }, [recentPageSize, recentQuery]);
+
+  useEffect(() => {
+    if (recentCurrentPage > totalRecentPages) {
+      setRecentCurrentPage(totalRecentPages);
+    }
+  }, [recentCurrentPage, totalRecentPages]);
 
   const formatPrice = (value) => {
     return new Intl.NumberFormat("es-CO", {
@@ -188,32 +238,89 @@ export default function InvoiceCopyPage() {
           {loadingRecent && <span style={styles.recentHint}>Cargando...</span>}
         </div>
 
+        <input
+          type="text"
+          value={recentQuery}
+          onChange={(event) => setRecentQuery(event.target.value)}
+          placeholder="Buscar por factura, documento o cliente..."
+          style={styles.recentSearchInput}
+        />
+
         {recentInvoices.length > 0 ? (
-          <div style={styles.recentGrid}>
-            {recentInvoices.map((invoice) => (
-              <button
-                key={invoice.invoiceId || invoice.invoiceNumber}
-                type="button"
-                style={styles.recentCard}
-                onClick={() => {
-                  setInvoiceNumber(invoice.invoiceNumber);
-                  setInvoiceData(invoice);
-                  setError("");
-                }}
-              >
-                <span style={styles.recentNumber}>{invoice.invoiceNumber}</span>
-                <span style={styles.recentCustomer}>
-                  {invoice.customerFullName || "Cliente no identificado"}
+          filteredRecentInvoices.length > 0 ? (
+            <>
+              <div style={styles.recentGrid}>
+                {paginatedRecentInvoices.map((invoice) => (
+                  <button
+                    key={invoice.invoiceId || invoice.invoiceNumber}
+                    type="button"
+                    style={styles.recentCard}
+                    onClick={() => {
+                      setInvoiceNumber(invoice.invoiceNumber);
+                      setInvoiceData(invoice);
+                      setError("");
+                    }}
+                  >
+                    <span style={styles.recentNumber}>{invoice.invoiceNumber}</span>
+                    <span style={styles.recentCustomer}>
+                      {invoice.customerFullName || "Cliente no identificado"}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Compra #{invoice.purchaseId} - {formatPrice(invoice.total)}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Productos: {Array.isArray(invoice.items) ? invoice.items.length : 0}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div style={styles.recentPagination}>
+                <span style={styles.recentHint}>
+                  Mostrando {recentVisibleFrom}-{recentVisibleTo} de {filteredRecentInvoices.length} registros
                 </span>
-                <span style={styles.recentMeta}>
-                  Compra #{invoice.purchaseId} - {formatPrice(invoice.total)}
+                <span style={styles.recentHint}>
+                  Página {recentCurrentPage} de {totalRecentPages}
                 </span>
-                <span style={styles.recentMeta}>
-                  Productos: {Array.isArray(invoice.items) ? invoice.items.length : 0}
-                </span>
-              </button>
-            ))}
-          </div>
+
+                <div style={styles.recentPaginationActions}>
+                  <select
+                    value={recentPageSize}
+                    onChange={(event) => setRecentPageSize(Number(event.target.value))}
+                    style={styles.pageSizeSelect}
+                  >
+                    {[10, 20, 50].map((option) => (
+                      <option key={option} value={option}>
+                        {option} registros
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    type="button"
+                    style={styles.pageButton}
+                    onClick={() => setRecentCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={recentCurrentPage === 1}
+                  >
+                    Anterior
+                  </button>
+
+                  <button
+                    type="button"
+                    style={styles.pageButtonPrimary}
+                    onClick={() =>
+                      setRecentCurrentPage((prev) => Math.min(prev + 1, totalRecentPages))
+                    }
+                    disabled={recentCurrentPage === totalRecentPages}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <p style={styles.noData}>No se encontraron facturas con ese criterio.</p>
+          )
         ) : (
           !loadingRecent && (
             <p style={recentError ? styles.recentError : styles.noData}>
@@ -228,99 +335,155 @@ export default function InvoiceCopyPage() {
 
 const styles = {
   card: {
-    background: "#ffffff",
-    borderRadius: "8px",
-    padding: "24px",
-    boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+    background: `
+      radial-gradient(circle at 8% 14%, rgba(99, 102, 241, 0.08), transparent 38%),
+      linear-gradient(180deg, rgba(10, 15, 27, 0.96) 0%, rgba(10, 15, 27, 0.92) 100%)
+    `,
+    borderRadius: "18px",
+    padding: "32px",
+    boxShadow: "0 24px 48px rgba(2, 6, 23, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
   },
   title: {
     marginTop: 0,
+    marginBottom: "8px",
+    color: "#f8fafc",
+    fontSize: "clamp(1.8rem, 2vw, 2rem)",
+    fontWeight: "800",
+    letterSpacing: "-0.5px",
   },
   subtitle: {
-    color: "#5b6472",
-    marginBottom: "20px",
+    color: "#cbd5e1",
+    fontSize: "0.95rem",
+    lineHeight: "1.6",
+    marginBottom: "24px",
+    letterSpacing: "0.2px",
   },
   form: {
     display: "flex",
     gap: "12px",
     flexWrap: "wrap",
-    marginBottom: "20px",
+    marginBottom: "24px",
+    padding: "20px",
+    borderRadius: "14px",
+    background: `
+      radial-gradient(circle at 8% 14%, rgba(99, 102, 241, 0.06), transparent 38%),
+      linear-gradient(180deg, rgba(10, 15, 27, 0.92) 0%, rgba(10, 15, 27, 0.88) 100%)
+    `,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    boxShadow: "0 12px 24px rgba(2, 6, 23, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
   },
   input: {
     flex: "1 1 260px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #d1d5db",
+    padding: "10px 14px",
+    minHeight: "42px",
+    borderRadius: "10px",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    background: "rgba(15, 23, 42, 0.8)",
+    color: "#f8fafc",
+    fontSize: "0.95rem",
+    letterSpacing: "0.2px",
+    transition: "all 180ms cubic-bezier(0.4, 0, 0.2, 1)",
+    outline: "none",
   },
   button: {
     border: "none",
-    borderRadius: "8px",
-    background: "#2563eb",
+    borderRadius: "10px",
+    background: "linear-gradient(135deg, #6366f1 0%, #5b5fef 48%, #22d3ee 100%)",
     color: "#fff",
-    padding: "12px 18px",
+    padding: "10px 20px",
+    minHeight: "42px",
     fontWeight: "700",
+    fontSize: "0.95rem",
+    letterSpacing: "0.2px",
     cursor: "pointer",
+    boxShadow: "0 14px 32px rgba(79, 70, 229, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+    transition: "all 180ms cubic-bezier(0.4, 0, 0.2, 1)",
   },
   error: {
-    background: "#fee2e2",
-    color: "#b91c1c",
-    padding: "12px",
-    borderRadius: "8px",
+    background: "rgba(239, 68, 68, 0.12)",
+    color: "#fca5a5",
+    padding: "12px 14px",
+    borderRadius: "10px",
     marginBottom: "16px",
+    border: "1px solid rgba(239, 68, 68, 0.3)",
+    fontSize: "0.9rem",
+    fontWeight: "500",
   },
   result: {
-    background: "#f8fafc",
-    border: "1px solid #e5e7eb",
-    borderRadius: "8px",
-    padding: "18px",
+    background: `
+      radial-gradient(circle at 8% 14%, rgba(99, 102, 241, 0.06), transparent 38%),
+      linear-gradient(180deg, rgba(10, 15, 27, 0.94) 0%, rgba(10, 15, 27, 0.9) 100%)
+    `,
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "14px",
+    padding: "24px",
+    boxShadow: "0 12px 24px rgba(2, 6, 23, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
+    animation: "fadeInUp 300ms ease-out",
   },
   resultHeader: {
     display: "flex",
     justifyContent: "space-between",
     gap: "16px",
-    borderBottom: "1px solid #e5e7eb",
-    paddingBottom: "14px",
-    marginBottom: "14px",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
+    paddingBottom: "16px",
+    marginBottom: "20px",
   },
   kicker: {
     display: "block",
-    color: "#64748b",
-    fontSize: "12px",
-    fontWeight: 800,
+    color: "#818cf8",
+    fontSize: "0.8rem",
+    fontWeight: 700,
     textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    marginBottom: "4px",
   },
   resultTitle: {
-    margin: "4px 0 0",
+    margin: "0",
+    color: "#f8fafc",
+    fontSize: "1.4rem",
+    fontWeight: "700",
   },
   total: {
-    fontSize: "22px",
+    fontSize: "1.6rem",
+    fontWeight: "800",
+    color: "#22d3ee",
+    letterSpacing: "-0.3px",
   },
   summaryGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: "10px",
-    marginBottom: "16px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "12px",
+    marginBottom: "20px",
   },
   label: {
     display: "block",
-    color: "#64748b",
-    fontSize: "12px",
+    color: "#94a3b8",
+    fontSize: "0.8rem",
+    fontWeight: "600",
+    letterSpacing: "0.3px",
     marginBottom: "4px",
+    textTransform: "uppercase",
   },
   totals: {
     display: "grid",
-    gap: "8px",
-    marginBottom: "18px",
+    gap: "10px",
+    marginBottom: "20px",
+    padding: "16px",
+    background: "rgba(99, 102, 241, 0.06)",
+    border: "1px solid rgba(99, 102, 241, 0.2)",
+    borderRadius: "10px",
   },
   totalLine: {
     display: "flex",
     justifyContent: "space-between",
-    gap: "12px",
-    maxWidth: "260px",
+    gap: "16px",
+    alignItems: "center",
   },
   itemsBox: {
     display: "grid",
     gap: "10px",
+    marginTop: "8px",
   },
   itemsList: {
     display: "grid",
@@ -331,156 +494,248 @@ const styles = {
     justifyContent: "space-between",
     gap: "12px",
     padding: "12px",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    background: "#ffffff",
+    border: "1px solid rgba(148, 163, 184, 0.12)",
+    borderRadius: "10px",
+    background: `
+      radial-gradient(circle at 8% 14%, rgba(99, 102, 241, 0.06), transparent 38%),
+      linear-gradient(180deg, rgba(10, 15, 27, 0.92) 0%, rgba(10, 15, 27, 0.88) 100%)
+    `,
+    transition: "all 180ms ease",
   },
   itemInfo: {
     display: "grid",
     gap: "4px",
   },
   productCode: {
-    color: "#2563eb",
-    fontSize: "12px",
-    fontWeight: 800,
+    color: "#c7d2fe",
+    fontSize: "0.8rem",
+    fontWeight: 700,
+    letterSpacing: "0.2px",
   },
   itemAmount: {
     textAlign: "right",
+    color: "#22d3ee",
+    fontWeight: "600",
   },
   noData: {
-    color: "#6b7280",
+    color: "#94a3b8",
+    textAlign: "center",
+    padding: "20px",
+    fontSize: "0.9rem",
   },
   recentSection: {
-    marginTop: "22px",
+    marginTop: "28px",
   },
   recentHeader: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: "12px",
-    marginBottom: "12px",
+    marginBottom: "16px",
+    paddingBottom: "12px",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
+  },
+  recentSearchInput: {
+    width: "100%",
+    marginBottom: "14px",
+    minHeight: "42px",
+    padding: "10px 14px",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "10px",
+    background: "rgba(15, 23, 42, 0.8)",
+    color: "#f8fafc",
+    fontSize: "0.9rem",
+    letterSpacing: "0.2px",
+    outline: "none",
   },
   recentTitle: {
     margin: 0,
-    color: "#0f172a",
+    color: "#f8fafc",
+    fontSize: "1.1rem",
+    fontWeight: "700",
+    letterSpacing: "-0.3px",
   },
   recentHint: {
-    color: "#64748b",
-    fontSize: "13px",
-    fontWeight: 700,
+    color: "#94a3b8",
+    fontSize: "0.85rem",
+    fontWeight: 500,
   },
   recentGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-    gap: "10px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "12px",
+    marginBottom: "16px",
   },
   recentCard: {
     display: "grid",
     gap: "6px",
     textAlign: "left",
     padding: "14px",
-    border: "1px solid #dbeafe",
-    borderRadius: "8px",
-    background: "#f8fafc",
-    color: "#0f172a",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "10px",
+    background: `
+      radial-gradient(circle at 8% 14%, rgba(99, 102, 241, 0.08), transparent 38%),
+      linear-gradient(180deg, rgba(10, 15, 27, 0.92) 0%, rgba(10, 15, 27, 0.88) 100%)
+    `,
+    color: "#f8fafc",
     cursor: "pointer",
+    boxShadow: "0 8px 16px rgba(2, 6, 23, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.02)",
+    transition: "all 180ms ease",
+  },
+  recentCardHover: {
+    borderColor: "rgba(99, 102, 241, 0.4)",
+    boxShadow: "0 12px 24px rgba(2, 6, 23, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
+    transform: "translateY(-1px)",
   },
   recentNumber: {
-    color: "#1d4ed8",
-    fontWeight: 900,
+    color: "#c7d2fe",
+    fontWeight: 700,
+    fontSize: "0.9rem",
+    letterSpacing: "-0.2px",
   },
   recentCustomer: {
-    fontWeight: 800,
+    fontWeight: 600,
+    color: "#f8fafc",
+    fontSize: "0.9rem",
   },
   recentMeta: {
-    color: "#64748b",
-    fontSize: "13px",
+    color: "#94a3b8",
+    fontSize: "0.8rem",
+    letterSpacing: "0.1px",
   },
   recentError: {
-    background: "#fee2e2",
-    color: "#b91c1c",
-    padding: "12px",
-    borderRadius: "8px",
+    background: "rgba(239, 68, 68, 0.12)",
+    color: "#fca5a5",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    border: "1px solid rgba(239, 68, 68, 0.3)",
+    fontSize: "0.9rem",
   },
   itemsTable: {
     width: "100%",
     borderCollapse: "collapse",
-    marginTop: "8px",
-    fontSize: "14px",
+    marginTop: "12px",
+    fontSize: "0.9rem",
   },
   tableHeaderProduct: {
     padding: "10px",
     textAlign: "left",
-    borderBottom: "2px solid #2563eb",
+    borderBottom: "2px solid rgba(99, 102, 241, 0.6)",
     fontWeight: "bold",
     fontSize: "12px",
-    color: "#1d4ed8",
+    color: "#c7d2fe",
     textTransform: "uppercase",
   },
   tableHeaderCode: {
     padding: "10px",
     textAlign: "center",
-    borderBottom: "2px solid #2563eb",
+    borderBottom: "2px solid rgba(99, 102, 241, 0.6)",
     fontWeight: "bold",
     fontSize: "12px",
-    color: "#1d4ed8",
+    color: "#c7d2fe",
     textTransform: "uppercase",
     width: "60px",
   },
   tableHeaderQty: {
     padding: "10px",
     textAlign: "center",
-    borderBottom: "2px solid #2563eb",
+    borderBottom: "2px solid rgba(99, 102, 241, 0.6)",
     fontWeight: "bold",
     fontSize: "12px",
-    color: "#1d4ed8",
+    color: "#c7d2fe",
     textTransform: "uppercase",
     width: "70px",
   },
   tableHeaderPrice: {
     padding: "10px",
     textAlign: "right",
-    borderBottom: "2px solid #2563eb",
+    borderBottom: "2px solid rgba(99, 102, 241, 0.6)",
     fontWeight: "bold",
     fontSize: "12px",
-    color: "#1d4ed8",
+    color: "#c7d2fe",
     textTransform: "uppercase",
     width: "110px",
   },
   tableHeaderSubtotal: {
     padding: "10px",
     textAlign: "right",
-    borderBottom: "2px solid #2563eb",
+    borderBottom: "2px solid rgba(99, 102, 241, 0.6)",
     fontWeight: "bold",
     fontSize: "12px",
-    color: "#1d4ed8",
+    color: "#c7d2fe",
     textTransform: "uppercase",
     width: "120px",
   },
   tableDataProduct: {
     padding: "10px",
     textAlign: "left",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
   },
   tableDataCode: {
     padding: "10px",
     textAlign: "center",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
   },
   tableDataQty: {
     padding: "10px",
     textAlign: "center",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
   },
   tableDataPrice: {
     padding: "10px",
     textAlign: "right",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
   },
   tableDataSubtotal: {
     padding: "10px",
     textAlign: "right",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid rgba(148, 163, 184, 0.12)",
     fontWeight: "bold",
+  },
+  recentPagination: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: "12px",
+    alignItems: "center",
+    marginTop: "14px",
+    paddingTop: "14px",
+    borderTop: "1px solid rgba(148, 163, 184, 0.12)",
+  },
+  recentPaginationActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flexWrap: "wrap",
+  },
+  pageSizeSelect: {
+    minHeight: "42px",
+    padding: "10px 12px",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "12px",
+    background: "rgba(15, 23, 42, 0.92)",
+    color: "#f8fafc",
+  },
+  pageButton: {
+    minHeight: "42px",
+    padding: "10px 14px",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "12px",
+    background: "rgba(30, 41, 59, 0.88)",
+    color: "#cbd5e1",
+    fontWeight: "700",
+    cursor: "pointer",
+  },
+  pageButtonPrimary: {
+    minHeight: "42px",
+    padding: "10px 14px",
+    border: "1px solid rgba(99, 102, 241, 0.28)",
+    borderRadius: "12px",
+    background: "linear-gradient(135deg, #7c3aed 0%, #6366f1 40%, #38bdf8 120%)",
+    color: "#fff",
+    fontWeight: "700",
+    cursor: "pointer",
+    boxShadow:
+      "0 10px 20px rgba(79, 70, 229, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.18)",
   },
 };

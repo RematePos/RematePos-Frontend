@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import "./ProductsPage.css";
 import { getProducts, deleteProduct } from "../services/productService";
 
-const ITEMS_PER_PAGE = 5;
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 const ProductsPage = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,20 +54,25 @@ const ProductsPage = () => {
     });
   }, [safeProducts, searchTerm]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
 
   const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
     return filteredProducts.slice(start, end);
-  }, [filteredProducts, currentPage]);
+  }, [filteredProducts, currentPage, pageSize]);
+
+  const visibleFrom =
+    filteredProducts.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const visibleTo = Math.min(currentPage * pageSize, filteredProducts.length);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [pageSize]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -100,61 +106,70 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="products-page">
-      <div className="products-container">
-        <div className="products-header">
+    <div className="products-page rp-page rp-fade-in">
+      <div className="products-container rp-page-shell">
+        <div className="products-header rp-page-header">
           <div>
-            <span className="products-badge">Inventario</span>
-            <h1>Gestión de productos</h1>
-            <p>
+            <span className="products-badge rp-badge rp-badge-info">Inventario</span>
+            <h1 className="rp-page-title">Gestión de productos</h1>
+            <p className="rp-page-subtitle">
               Consulta, registra, edita y elimina productos dentro de RematePOS.
             </p>
           </div>
 
-          <Link to="/inventory/new" className="btn btn-primary">
+          <Link to="/inventory/new" className="btn btn-primary rp-btn rp-btn-primary">
             + Nuevo producto
           </Link>
         </div>
 
-        <div className="products-stats">
-          <div className="stat-card">
+        <div className="products-stats rp-grid">
+          <div className="stat-card rp-stat-card">
             <span>Total productos</span>
             <strong>{safeProducts.length}</strong>
           </div>
 
-          <div className="stat-card">
+          <div className="stat-card rp-stat-card">
             <span>Mostrando</span>
             <strong>{paginatedProducts.length}</strong>
           </div>
 
-          <div className="stat-card">
+          <div className="stat-card rp-stat-card">
             <span>Resultados</span>
             <strong>{filteredProducts.length}</strong>
           </div>
         </div>
 
-        <div className="products-toolbar">
+        <div className="products-toolbar rp-table-toolbar rp-card">
           <div className="search-box">
             <input
               type="text"
               placeholder="Buscar por nombre, precio o stock..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="rp-input rp-search"
             />
           </div>
+
+          <select className="rp-page-size" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
+            {PAGE_SIZE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option} registros
+              </option>
+            ))}
+          </select>
         </div>
 
         {loading && (
-          <div className="state-box loading-box">Cargando productos...</div>
+          <div className="state-box loading-box rp-loading-state">Cargando productos...</div>
         )}
 
         {!loading && error && (
-          <div className="state-box error-box">{error}</div>
+          <div className="state-box error-box rp-error-state">{error}</div>
         )}
 
         {!loading && !error && (
-          <div className="table-wrapper">
-            <table className="products-table">
+          <div className="table-wrapper rp-table-shell">
+            <table className="products-table rp-table">
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -215,8 +230,8 @@ const ProductsPage = () => {
                 ) : (
                   <tr>
                     <td colSpan="4">
-                      <div className="empty-state">
-                        No se encontraron productos.
+                      <div className="empty-state rp-empty-state">
+                        No se encontraron registros.
                       </div>
                     </td>
                   </tr>
@@ -226,21 +241,21 @@ const ProductsPage = () => {
           </div>
         )}
 
-        <div className="pagination">
+        <div className="pagination rp-pagination">
           <button
-            className="btn btn-pagination"
+            className="btn btn-pagination rp-btn rp-btn-secondary"
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
           >
             Anterior
           </button>
 
-          <span className="pagination-info">
-            Página {currentPage} de {totalPages}
+          <span className="pagination-info rp-pagination-info">
+            Mostrando {visibleFrom}-{visibleTo} de {filteredProducts.length} registros | Página {currentPage} de {totalPages}
           </span>
 
           <button
-            className="btn btn-pagination"
+            className="btn btn-pagination rp-btn rp-btn-primary"
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }

@@ -1,9 +1,27 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../services/AuthService";
+import "./LoginPage.css";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add("auth-route");
+    const header = document.querySelector('#root > header') || document.querySelector('header');
+    const previousDisplay = header ? header.style.display : "";
+
+    if (header) {
+      header.style.display = "none";
+    }
+
+    return () => {
+      if (header) {
+        header.style.display = previousDisplay;
+      }
+      document.body.classList.remove("auth-route");
+    };
+  }, []);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -79,107 +97,134 @@ export default function RegisterPage() {
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.container}>
-        <div style={styles.leftPanel}>
-          <div style={styles.brandBadge}>rematePOS</div>
-          <h1 style={styles.leftTitle}>Crea tu cuenta</h1>
-          <p style={styles.leftText}>
-            Regístrate para acceder al sistema y gestionar ventas, inventario y
-            facturación de forma rápida y organizada.
-          </p>
-
-          <div style={styles.featureList}>
-            <div style={styles.featureItem}>✅ Registro rápido y sencillo</div>
-            <div style={styles.featureItem}>✅ Acceso seguro al sistema</div>
-            <div style={styles.featureItem}>✅ Interfaz amigable y clara</div>
+    <div className="auth-page auth-page--register">
+      <div className="auth-shell">
+        <section className="auth-panel auth-panel-hero">
+          <div className="auth-brand">
+            <span className="auth-brand-mark">R</span>
+            <div>
+              <strong>rematePOS</strong>
+              <span>SaaS visual lab</span>
+            </div>
           </div>
-        </div>
 
-        <div style={styles.card}>
-          <div style={styles.header}>
-            <h2 style={styles.title}>Registro</h2>
-            <p style={styles.subtitle}>
-              Completa tus datos para crear una nueva cuenta.
+          <div className="auth-hero-copy">
+            <p className="auth-eyebrow">Crea tu acceso</p>
+            <h1>Crea tu cuenta</h1>
+            <p>
+              Registra tu perfil en un sistema POS con estética oscura premium,
+              claro, ágil y consistente.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Nombre completo</label>
-              <input
-                type="text"
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                placeholder="Ej: Carlos Andrés"
-                style={styles.input}
-              />
+          <ul className="auth-benefits">
+            <li>Registro rápido y sencillo</li>
+            <li>Acceso seguro al sistema</li>
+            <li>Interfaz amigable y clara</li>
+          </ul>
+        </section>
+
+        <section className="auth-panel auth-panel-form auth-panel-form--register">
+          <div className="auth-form-head">
+            <p className="auth-eyebrow">Registro</p>
+            <h2>Registro</h2>
+            <p>Completa tus datos para crear una nueva cuenta.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form auth-form--register">
+            <div className="auth-grid auth-grid--two">
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="fullName">
+                  Nombre completo
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  placeholder="Ej: Carlos Andrés"
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="email">
+                  Correo electrónico
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="correo@ejemplo.com"
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="username">
+                  Usuario
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  value={form.username}
+                  onChange={handleChange}
+                  placeholder="Escribe tu usuario"
+                  className="auth-input"
+                  autoComplete="username"
+                />
+              </div>
+
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="password">
+                  Contraseña
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Mínimo 6 caracteres"
+                  className="auth-input"
+                  autoComplete="new-password"
+                />
+              </div>
+
+              <div className="auth-field auth-field--full">
+                <label className="auth-label" htmlFor="confirmPassword">
+                  Confirmar contraseña
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Repite la contraseña"
+                  className="auth-input"
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Correo electrónico</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="correo@ejemplo.com"
-                style={styles.input}
-              />
-            </div>
+            {message && <div className="auth-alert auth-alert-success">{message}</div>}
+            {error && <div className="auth-alert auth-alert-error">{error}</div>}
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Usuario</label>
-              <input
-                type="text"
-                name="username"
-                value={form.username}
-                onChange={handleChange}
-                placeholder="Escribe tu usuario"
-                style={styles.input}
-              />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Contraseña</label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Mínimo 6 caracteres"
-                style={styles.input}
-              />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Confirmar contraseña</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                placeholder="Repite la contraseña"
-                style={styles.input}
-              />
-            </div>
-
-            {message && <div style={styles.success}>{message}</div>}
-            {error && <div style={styles.error}>{error}</div>}
-
-            <button type="submit" disabled={loading} style={styles.button}>
+            <button type="submit" disabled={loading} className="auth-button auth-button-primary">
               {loading ? "Registrando..." : "Crear cuenta"}
             </button>
           </form>
 
-          <div style={styles.footer}>
-            <span style={styles.footerText}>¿Ya tienes cuenta?</span>
-            <Link to="/login" style={styles.link}>
-              Inicia sesión aquí
-            </Link>
+          <div className="auth-footer">
+            <span>¿Ya tienes cuenta?</span>
+            <Link to="/login">Inicia sesión aquí</Link>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
@@ -326,3 +371,5 @@ const styles = {
     fontWeight: "700",
   },
 };
+
+void styles;

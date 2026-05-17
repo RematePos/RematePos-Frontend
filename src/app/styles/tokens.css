@@ -1,0 +1,118 @@
+:root {
+  /* ========== BACKGROUND PALETTE ========== */
+  --rp-bg-main: #03070f;
+  --rp-bg-page: #0a0f1b;
+  --rp-bg-panel: #0f1419;
+  --rp-bg-panel-soft: #141b28;
+  --rp-bg-card: rgba(10, 15, 27, 0.96);
+  --rp-bg-card-strong: rgba(12, 18, 30, 0.98);
+  --rp-bg-card-hover: rgba(14, 21, 35, 0.92);
+  --rp-bg-input: rgba(15, 23, 42, 0.8);
+  --rp-bg-input-hover: rgba(15, 23, 42, 0.94);
+
+  /* ========== BORDERS & DIVIDERS ========== */
+  --rp-border-soft: rgba(148, 163, 184, 0.12);
+  --rp-border-medium: rgba(148, 163, 184, 0.18);
+  --rp-border-strong: rgba(148, 163, 184, 0.3);
+  --rp-border-accent: rgba(99, 102, 241, 0.4);
+  --rp-border-glow: rgba(99, 102, 241, 0.5);
+
+  /* ========== TEXT COLORS ========== */
+  --rp-text-main: #f8fafc;
+  --rp-text-secondary: #cbd5e1;
+  --rp-text-muted: #94a3b8;
+  --rp-text-soft: #64748b;
+  --rp-text-accent: #a5f3fc;
+
+  /* ========== SEMANTIC COLORS ========== */
+  --rp-primary: #6366f1;
+  --rp-primary-dark: #4f46e5;
+  --rp-primary-light: #818cf8;
+  --rp-primary-soft: rgba(99, 102, 241, 0.12);
+  --rp-primary-glow: rgba(99, 102, 241, 0.4);
+
+  --rp-secondary: #1f2937;
+  --rp-secondary-hover: #334155;
+  --rp-secondary-soft: rgba(31, 41, 55, 0.16);
+
+  --rp-accent: #22d3ee;
+  --rp-accent-soft: rgba(34, 211, 238, 0.12);
+
+  --rp-success: #10b981;
+  --rp-success-hover: #059669;
+  --rp-success-soft: rgba(16, 185, 129, 0.12);
+  --rp-success-text: #86efac;
+
+  --rp-warning: #f59e0b;
+  --rp-warning-hover: #d97706;
+  --rp-warning-soft: rgba(245, 158, 11, 0.12);
+  --rp-warning-text: #fcd34d;
+
+  --rp-danger: #ef4444;
+  --rp-danger-hover: #dc2626;
+  --rp-danger-soft: rgba(239, 68, 68, 0.12);
+  --rp-danger-text: #fca5a5;
+
+  --rp-info: #06b6d4;
+  --rp-info-soft: rgba(6, 182, 212, 0.12);
+  --rp-info-text: #67e8f9;
+
+  /* ========== SHADOWS (Multi-layer depth) ========== */
+  --rp-shadow-xs: 0 2px 4px rgba(2, 6, 23, 0.08);
+  --rp-shadow-sm: 0 8px 16px rgba(2, 6, 23, 0.16);
+  --rp-shadow-md: 0 14px 32px rgba(2, 6, 23, 0.24);
+  --rp-shadow-lg: 0 24px 48px rgba(2, 6, 23, 0.32);
+  --rp-shadow-xl: 0 32px 64px rgba(2, 6, 23, 0.4);
+  --rp-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --rp-shadow-inset-strong: inset 0 2px 4px rgba(255, 255, 255, 0.06);
+
+  /* ========== GLOWS ========== */
+  --rp-glow-primary: 0 0 12px rgba(99, 102, 241, 0.28);
+  --rp-glow-primary-strong: 0 0 20px rgba(99, 102, 241, 0.36);
+  --rp-glow-accent: 0 0 12px rgba(34, 211, 238, 0.24);
+  --rp-glow-success: 0 0 12px rgba(16, 185, 129, 0.24);
+  --rp-glow-warning: 0 0 12px rgba(245, 158, 11, 0.24);
+  --rp-glow-danger: 0 0 12px rgba(239, 68, 68, 0.24);
+
+  /* ========== BORDER RADIUS ========== */
+  --rp-radius-xs: 6px;
+  --rp-radius-sm: 10px;
+  --rp-radius-md: 14px;
+  --rp-radius-lg: 18px;
+  --rp-radius-xl: 24px;
+  --rp-radius-2xl: 32px;
+  --rp-radius-pill: 999px;
+
+  /* ========== SPACING SCALE ========== */
+  --rp-space-1: 4px;
+  --rp-space-2: 8px;
+  --rp-space-3: 12px;
+  --rp-space-4: 16px;
+  --rp-space-5: 20px;
+  --rp-space-6: 24px;
+  --rp-space-7: 28px;
+  --rp-space-8: 32px;
+  --rp-space-9: 36px;
+  --rp-space-10: 40px;
+
+  /* ========== TRANSITIONS ========== */
+  --rp-transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --rp-transition-base: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --rp-transition-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ========== LAYOUT ========== */
+  --rp-max-content: 1240px;
+  --rp-max-content-tight: 1160px;
+  --rp-max-content-compact: 1080px;
+
+  /* ========== FOCUS STATES ========== */
+  --rp-focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.3);
+  --rp-focus-ring-accent: 0 0 0 3px rgba(34, 211, 238, 0.3);
+
+  /* ========== Z-INDEX HIERARCHY ========== */
+  --rp-z-dropdown: 100;
+  --rp-z-sticky: 200;
+  --rp-z-modal-backdrop: 1000;
+  --rp-z-modal: 1001;
+  --rp-z-tooltip: 1100;
+}

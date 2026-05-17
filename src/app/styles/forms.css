@@ -1,0 +1,99 @@
+.rp-form {
+  display: grid;
+  gap: var(--rp-space-4);
+}
+
+.rp-form-row {
+  display: grid;
+  gap: var(--rp-space-4);
+}
+
+.rp-form-row.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rp-field {
+  display: grid;
+  gap: var(--rp-space-2);
+}
+
+.rp-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--rp-space-3);
+}
+
+.rp-label {
+  color: var(--rp-text-secondary);
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.rp-input,
+.rp-select,
+.rp-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--rp-border-soft);
+  border-radius: var(--rp-radius-md);
+  background: rgba(15, 23, 42, 0.92);
+  color: var(--rp-text-main);
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.rp-input::placeholder,
+.rp-textarea::placeholder {
+  color: var(--rp-text-muted);
+}
+
+.rp-input:focus,
+.rp-select:focus,
+.rp-textarea:focus {
+  border-color: rgba(99, 102, 241, 0.58);
+  box-shadow: var(--rp-focus-ring);
+}
+
+.rp-select:disabled,
+.rp-input:disabled,
+.rp-textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.rp-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.rp-help-text {
+  color: var(--rp-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.rp-error-text {
+  color: #fecaca;
+}
+
+.rp-success-text {
+  color: #bbf7d0;
+}
+
+.rp-form-actions,
+.rp-inline-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--rp-space-3);
+  flex-wrap: wrap;
+}
+
+.rp-inline-actions {
+  justify-content: space-between;
+}
