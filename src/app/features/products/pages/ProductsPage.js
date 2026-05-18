@@ -2,16 +2,22 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./ProductsPage.css";
 import { getProducts, deleteProduct } from "../services/productService";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 const ProductsPage = () => {
+  const { hasPermission } = useAuth();
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const canCreateProduct = hasPermission("PRODUCTS_CREATE");
+  const canUpdateProduct = hasPermission("PRODUCTS_UPDATE");
+  const canDeleteProduct = hasPermission("PRODUCTS_DELETE");
+  const canManageProducts = canUpdateProduct || canDeleteProduct;
 
   const loadProducts = useCallback(async () => {
     try {
@@ -81,6 +87,8 @@ const ProductsPage = () => {
   }, [currentPage, totalPages]);
 
   const handleDelete = async (id, productName) => {
+    if (!canDeleteProduct) return;
+
     const confirmed = window.confirm(
       `¿Deseas eliminar el producto "${productName}"?`
     );
@@ -117,9 +125,11 @@ const ProductsPage = () => {
             </p>
           </div>
 
-          <Link to="/inventory/new" className="btn btn-primary rp-btn rp-btn-primary">
-            + Nuevo producto
-          </Link>
+          {canCreateProduct && (
+            <Link to="/inventory/new" className="btn btn-primary rp-btn rp-btn-primary">
+              + Nuevo producto
+            </Link>
+          )}
         </div>
 
         <div className="products-stats rp-grid">
@@ -175,7 +185,7 @@ const ProductsPage = () => {
                   <th>Nombre</th>
                   <th>Precio</th>
                   <th>Stock</th>
-                  <th className="actions-column">Acciones</th>
+                  {canManageProducts && <th className="actions-column">Acciones</th>}
                 </tr>
               </thead>
 
@@ -206,30 +216,36 @@ const ProductsPage = () => {
                         </span>
                       </td>
 
-                      <td>
-                        <div className="actions">
-                          <Link
-                            to={`/products/edit/${product.id}`}
-                            className="btn btn-secondary"
-                          >
-                            Editar
-                          </Link>
+                      {canManageProducts && (
+                        <td>
+                          <div className="actions">
+                            {canUpdateProduct && (
+                              <Link
+                                to={`/products/edit/${product.id}`}
+                                className="btn btn-secondary"
+                              >
+                                Editar
+                              </Link>
+                            )}
 
-                          <button
-                            className="btn btn-danger"
-                            onClick={() =>
-                              handleDelete(product.id, product.name)
-                            }
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </td>
+                            {canDeleteProduct && (
+                              <button
+                                className="btn btn-danger"
+                                onClick={() =>
+                                  handleDelete(product.id, product.name)
+                                }
+                              >
+                                Eliminar
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4">
+                    <td colSpan={canManageProducts ? 4 : 3}>
                       <div className="empty-state rp-empty-state">
                         No se encontraron registros.
                       </div>

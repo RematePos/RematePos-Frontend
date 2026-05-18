@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import InventoryPage from "../features/inventory/pages/InventoryPage";
 import NewProductPage from "../features/products/pages/NewProductPage";
@@ -8,6 +8,8 @@ import RegisterPage from "../features/auth/pages/RegisterPage";
 import SalesPage from "../features/sales/pages/SalesPage";
 import AccountSettingsPage from "../features/account/pages/AccountSettingsPage";
 import CategoriesPage from "../features/categories/pages/CategoriesPage";
+import ProtectedRoute from "../features/auth/components/ProtectedRoute";
+import { useAuth } from "../features/auth/context/AuthContext";
 
 import BillingPage from "../features/billing/pages/BillingPage";
 import CustomerIdentificationPage from "../features/billing/pages/CustomerIdentificationPage";
@@ -16,79 +18,177 @@ import ReturnsPage from "../features/billing/pages/ReturnsPage";
 import InvoiceCopyPage from "../features/billing/pages/InvoiceCopyPage";
 import ElectronicBillingIntegrationPage from "../features/billing/pages/ElectronicBillingIntegrationPage";
 
+const canShow = (auth, permissions = []) => auth.hasAnyPermission(permissions);
+
 const Layout = () => {
+  const auth = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    auth.logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
     <>
       <header style={headerStyle}>
         <div style={brandStyle}>rematePOS</div>
 
         <nav style={navStyle}>
-          <NavLink to="/login" style={linkStyle}>
-            Iniciar sesión
-          </NavLink>
+          {!auth.isAuthenticated && (
+            <>
+              <NavLink to="/login" style={linkStyle}>
+                Iniciar sesion
+              </NavLink>
 
-          <NavLink to="/register" style={linkStyle}>
-            Registro
-          </NavLink>
+              <NavLink to="/register" style={linkStyle}>
+                Registro
+              </NavLink>
+            </>
+          )}
 
-          <NavLink to="/sales" style={linkStyle}>
-            Ventas
-          </NavLink>
+          {auth.isAuthenticated && canShow(auth, ["SALES_CREATE", "PRODUCTS_READ"]) && (
+            <NavLink to="/sales" style={linkStyle}>
+              Ventas
+            </NavLink>
+          )}
 
-          <NavLink to="/inventory" style={linkStyle}>
-            Inventario
-          </NavLink>
+          {auth.isAuthenticated && canShow(auth, ["PRODUCTS_READ"]) && (
+            <NavLink to="/inventory" style={linkStyle}>
+              Inventario
+            </NavLink>
+          )}
 
-          <NavLink to="/categories" style={linkStyle}>
-            Categorías
-          </NavLink>
+          {auth.isAuthenticated &&
+            canShow(auth, ["CATEGORIES_READ", "CATEGORIES_CREATE"]) && (
+              <NavLink to="/categories" style={linkStyle}>
+                Categorias
+              </NavLink>
+            )}
 
-          <NavLink to="/account" style={linkStyle}>
-            Cuenta
-          </NavLink>
+          {auth.isAuthenticated &&
+            canShow(auth, ["INVOICES_READ", "SALES_CREATE", "PRODUCTS_UPDATE"]) && (
+              <NavLink to="/billing" style={linkStyle}>
+                Facturacion
+              </NavLink>
+            )}
 
-          <NavLink to="/billing" style={linkStyle}>
-            Facturación
-          </NavLink>
+          {auth.isAuthenticated && (
+            <>
+              <NavLink to="/account" style={linkStyle}>
+                Cuenta
+              </NavLink>
+              <button type="button" style={buttonLinkStyle} onClick={handleLogout}>
+                Salir
+              </button>
+            </>
+          )}
         </nav>
       </header>
 
       <main style={mainStyle}>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/"
+            element={
+              auth.isAuthenticated ? (
+                <Navigate to="/sales" replace />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
 
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          <Route path="/sales" element={<SalesPage />} />
-
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="/inventory/new" element={<NewProductPage />} />
-          <Route path="/categories" element={<CategoriesPage />} />
-
           <Route
-            path="/products"
-            element={<Navigate to="/inventory" replace />}
-          />
-          <Route
-            path="/products/new"
-            element={<Navigate to="/inventory/new" replace />}
+            path="/sales"
+            element={
+              <ProtectedRoute requiredPermissions={["SALES_CREATE", "PRODUCTS_READ"]}>
+                <SalesPage />
+              </ProtectedRoute>
+            }
           />
 
-          <Route path="/account" element={<AccountSettingsPage />} />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute requiredPermissions={["PRODUCTS_READ"]}>
+                <InventoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory/new"
+            element={
+              <ProtectedRoute requiredPermissions={["PRODUCTS_CREATE"]}>
+                <NewProductPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <ProtectedRoute requiredPermissions={["CATEGORIES_READ", "CATEGORIES_CREATE"]}>
+                <CategoriesPage />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/billing" element={<BillingPage />}>
+          <Route path="/products" element={<Navigate to="/inventory" replace />} />
+          <Route path="/products/new" element={<Navigate to="/inventory/new" replace />} />
+
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <AccountSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/billing"
+            element={
+              <ProtectedRoute requiredPermissions={["INVOICES_READ", "SALES_CREATE"]}>
+                <BillingPage />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<CustomerIdentificationPage />} />
-            <Route path="facturar" element={<BillingCheckoutPage />} />
             <Route
-              path="checkout"
-              element={<Navigate to="/billing/facturar" replace />}
+              path="facturar"
+              element={
+                <ProtectedRoute requiredPermissions={["SALES_CREATE"]}>
+                  <BillingCheckoutPage />
+                </ProtectedRoute>
+              }
             />
-            <Route path="returns" element={<ReturnsPage />} />
-            <Route path="invoice-copy" element={<InvoiceCopyPage />} />
+            <Route path="checkout" element={<Navigate to="/billing/facturar" replace />} />
+            <Route
+              path="returns"
+              element={
+                <ProtectedRoute requiredPermissions={["RETURNS_CREATE", "PRODUCTS_UPDATE"]}>
+                  <ReturnsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="invoice-copy"
+              element={
+                <ProtectedRoute requiredPermissions={["INVOICES_READ"]}>
+                  <InvoiceCopyPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="integration"
-              element={<ElectronicBillingIntegrationPage />}
+              element={
+                <ProtectedRoute requiredPermissions={["INVOICES_READ", "ACCOUNT_MANAGE"]}>
+                  <ElectronicBillingIntegrationPage />
+                </ProtectedRoute>
+              }
             />
           </Route>
 
@@ -124,6 +224,7 @@ const navStyle = {
   display: "flex",
   gap: "16px",
   flexWrap: "wrap",
+  alignItems: "center",
 };
 
 const linkStyle = ({ isActive }) => ({
@@ -134,6 +235,16 @@ const linkStyle = ({ isActive }) => ({
   borderRadius: "10px",
   background: isActive ? "rgba(255,255,255,0.18)" : "transparent",
 });
+
+const buttonLinkStyle = {
+  color: "#fff",
+  border: "1px solid rgba(255,255,255,0.35)",
+  background: "transparent",
+  fontWeight: 700,
+  padding: "8px 12px",
+  borderRadius: "10px",
+  cursor: "pointer",
+};
 
 const mainStyle = {
   minHeight: "calc(100vh - 72px)",

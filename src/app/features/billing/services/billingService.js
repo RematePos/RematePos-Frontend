@@ -1,3 +1,5 @@
+import { buildAuthHeaders } from "../../../services/api";
+
 const API_GATEWAY_URL =
   process.env.REACT_APP_API_GATEWAY_URL || "http://localhost:8080";
 
@@ -6,18 +8,8 @@ const CUSTOMER_BASE_URL = `${API_BASE_URL}/customers`;
 const INVOICE_BASE_URL = `${API_BASE_URL}/invoices`;
 const PURCHASE_BASE_URL = `${API_BASE_URL}/purchases`;
 
-function getToken() {
-  return sessionStorage.getItem("token") || localStorage.getItem("token") || "";
-}
-
 function buildHeaders(extraHeaders = {}) {
-  const token = getToken();
-
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...extraHeaders,
-  };
+  return buildAuthHeaders(extraHeaders);
 }
 
 async function parseResponse(response) {
@@ -36,6 +28,14 @@ async function parseResponse(response) {
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Tu sesion expiro. Inicia sesion nuevamente.");
+    }
+
+    if (response.status === 403) {
+      throw new Error("No tienes permisos para esta accion");
+    }
+
     throw new Error(
       data?.message ||
         data?.error ||
