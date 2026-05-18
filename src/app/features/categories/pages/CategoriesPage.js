@@ -5,6 +5,7 @@ import {
   getCategories,
   updateCategory,
 } from "../../products/services/productService";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const defaultForm = {
   id: null,
@@ -31,6 +32,7 @@ const getCategoryStatus = (status) => {
 };
 
 const CategoriesPage = () => {
+  const { hasPermission } = useAuth();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,6 +43,8 @@ const CategoriesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState(defaultForm);
+  const canCreateCategory = hasPermission("CATEGORIES_CREATE");
+  const canUpdateCategory = hasPermission("CATEGORIES_UPDATE");
 
   const loadCategories = async () => {
     try {
@@ -99,6 +103,8 @@ const CategoriesPage = () => {
   };
 
   const openCreateModal = () => {
+    if (!canCreateCategory) return;
+
     resetForm();
     setError("");
     setSuccess("");
@@ -106,6 +112,8 @@ const CategoriesPage = () => {
   };
 
   const openEditModal = (category) => {
+    if (!canUpdateCategory) return;
+
     setForm({
       id: category.id,
       name: category.name || "",
@@ -144,6 +152,12 @@ const CategoriesPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if ((form.id && !canUpdateCategory) || (!form.id && !canCreateCategory)) {
+      setError("No tienes permisos para esta accion.");
+      setSuccess("");
+      return;
+    }
 
     const validationError = validateForm();
     if (validationError) {
@@ -197,9 +211,11 @@ const CategoriesPage = () => {
             <h1 className="rp-page-title">Gestión de categorías</h1>
             <p className="rp-page-subtitle">Administra categorías activas para productos del sistema POS.</p>
           </div>
-          <button type="button" className="btn btn-primary rp-btn rp-btn-primary" onClick={openCreateModal}>
-            + Nueva categoría
-          </button>
+          {canCreateCategory && (
+            <button type="button" className="btn btn-primary rp-btn rp-btn-primary" onClick={openCreateModal}>
+              + Nueva categoría
+            </button>
+          )}
         </header>
 
         <section className="categories-toolbar rp-card rp-table-toolbar">
@@ -237,7 +253,7 @@ const CategoriesPage = () => {
                   <th>Nombre</th>
                   <th>Descripción</th>
                   <th>Estado</th>
-                  <th>Acciones</th>
+                  {canUpdateCategory && <th>Acciones</th>}
                 </tr>
               </thead>
               <tbody>
@@ -251,15 +267,17 @@ const CategoriesPage = () => {
                       <td>
                         <span className={status.className}>{status.label}</span>
                       </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="btn btn-table"
-                          onClick={() => openEditModal(category)}
-                        >
-                          Editar
-                        </button>
-                      </td>
+                      {canUpdateCategory && (
+                        <td>
+                          <button
+                            type="button"
+                            className="btn btn-table"
+                            onClick={() => openEditModal(category)}
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
