@@ -47,7 +47,9 @@ const normalizeLoginPayload = (payload = {}) => {
   const data = payload.data || payload;
   const user = data.user || {};
   const token = data.accessToken || data.token || user.accessToken || "";
-  const roles = asArray(data.roles || user.roles);
+  const tenantRoles = asArray(data.roles || user.roles);
+  const platformRoles = asArray(data.platformRoles || user.platformRoles);
+  const roles = Array.from(new Set([...tenantRoles, ...platformRoles]));
   const permissions = asArray(data.permissions || user.permissions);
 
   return {
@@ -59,6 +61,7 @@ const normalizeLoginPayload = (payload = {}) => {
       ...user,
       roles,
       permissions,
+      platformRoles,
     },
     roles,
     permissions,
