@@ -8,6 +8,7 @@ import {
 import {
   findTenantUser,
   getCurrentTenantId,
+  isTenantOwnerUser,
   TENANT_USER_ROLES,
 } from "./tenantUserHelpers";
 import "./TenantUserPages.css";
@@ -29,6 +30,12 @@ export default function TenantUserEditPage() {
   const [error, setError] = useState("");
 
   const currentUser = useMemo(() => findTenantUser(users, userId), [users, userId]);
+  const blockingError =
+    error &&
+    !loading &&
+    (error.includes("No hay un negocio activo") ||
+      error.includes("Usuario no encontrado") ||
+      error.includes("No es posible editar al propietario principal"));
 
   useEffect(() => {
     const load = async () => {
@@ -46,6 +53,10 @@ export default function TenantUserEditPage() {
         const selected = findTenantUser(nextUsers, userId);
         if (!selected) {
           setError("Usuario no encontrado en el negocio activo.");
+          return;
+        }
+        if (isTenantOwnerUser(selected)) {
+          setError("No es posible editar al propietario principal desde esta pantalla.");
           return;
         }
         setForm({
@@ -126,6 +137,19 @@ export default function TenantUserEditPage() {
 
         {error && <div className="tenant-users-error">{error}</div>}
 
+        {blockingError && (
+          <section className="tenant-users-panel tenant-users-panel-compact">
+            <div className="tenant-users-state">
+              <p className="tenant-users-control-title">Edicion bloqueada</p>
+              <p className="tenant-users-control-text">{error}</p>
+              <Link className="tenant-user-btn tenant-user-btn-secondary" to="/settings/users">
+                Volver a usuarios
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {!blockingError && (
         <section className="tenant-users-panel">
           {loading ? (
             <div className="tenant-users-state">Cargando usuario...</div>
@@ -173,6 +197,7 @@ export default function TenantUserEditPage() {
             </form>
           )}
         </section>
+        )}
       </div>
     </div>
   );
