@@ -6,7 +6,14 @@ import {
   enableTenantUser,
   listTenantUsers,
 } from "../services/tenantUserService";
-import { getCurrentTenantId } from "./tenantUserHelpers";
+import {
+  canEditTenantUserRow,
+  canToggleTenantUserRow,
+  getCurrentTenantId,
+  getTenantUserRoleLabel,
+  isSameTenantUser,
+  isTenantOwnerUser,
+} from "./tenantUserHelpers";
 import "./TenantUserPages.css";
 
 export default function TenantUsersPage() {
@@ -51,7 +58,7 @@ export default function TenantUsersPage() {
   }, [loadUsers]);
 
   const handleStatus = async (user) => {
-    if (!tenantId || !canUpdateUser) return;
+    if (!tenantId || !canUpdateUser || !canToggleTenantUserRow(user, auth.user)) return;
     const action = user.active ? disableTenantUser : enableTenantUser;
 
     try {
@@ -119,7 +126,19 @@ export default function TenantUsersPage() {
                     <td>{user.email}</td>
                     <td>{user.fullName}</td>
                     <td>
-                      <span className="tenant-user-role">{user.role}</span>
+                      <div className="tenant-user-badges">
+                        <span className="tenant-user-role">{getTenantUserRoleLabel(user.role)}</span>
+                        {isTenantOwnerUser(user) && (
+                          <span className="tenant-user-badge tenant-user-badge-owner">
+                            Propietario principal
+                          </span>
+                        )}
+                        {isSameTenantUser(user, auth.user) && (
+                          <span className="tenant-user-badge tenant-user-badge-self">
+                            Tu usuario
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <span className={`tenant-user-status ${user.active ? "tenant-user-active" : "tenant-user-inactive"}`}>
@@ -128,22 +147,41 @@ export default function TenantUsersPage() {
                     </td>
                     {canUpdateUser && (
                       <td>
-                        <div className="tenant-users-actions">
-                          <Link className="tenant-user-btn" to={`/settings/users/${user.userId}/edit`}>
-                            Editar
-                          </Link>
-                          <button
-                            className={user.active ? "tenant-user-btn tenant-user-btn-danger" : "tenant-user-btn tenant-user-btn-primary"}
-                            onClick={() => handleStatus(user)}
-                            disabled={busyUserId === user.userId}
-                          >
-                            {busyUserId === user.userId
-                              ? "Guardando..."
-                              : user.active
-                              ? "Desactivar"
-                              : "Reactivar"}
-                          </button>
-                        </div>
+                        {canEditTenantUserRow(user) ? (
+                          <div className="tenant-users-actions">
+                            <Link
+                              className="tenant-user-btn tenant-user-btn-secondary"
+                              to={`/settings/users/${user.userId}/edit`}
+                            >
+                              Editar
+                            </Link>
+                            {canToggleTenantUserRow(user, auth.user) ? (
+                              <button
+                                className={
+                                  user.active
+                                    ? "tenant-user-btn tenant-user-btn-danger"
+                                    : "tenant-user-btn tenant-user-btn-primary"
+                                }
+                                onClick={() => handleStatus(user)}
+                                disabled={busyUserId === user.userId}
+                              >
+                                {busyUserId === user.userId
+                                  ? "Guardando..."
+                                  : user.active
+                                  ? "Desactivar"
+                                  : "Reactivar"}
+                              </button>
+                            ) : (
+                              <span className="tenant-users-action-note">
+                                Tu usuario no puede desactivarse.
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="tenant-users-action-note">
+                            Sin acciones para este rol.
+                          </span>
+                        )}
                       </td>
                     )}
                   </tr>

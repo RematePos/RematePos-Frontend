@@ -22,10 +22,14 @@ import TenantCreatePage from "../features/tenants/pages/TenantCreatePage";
 import TenantUsersPage from "../features/tenantUsers/pages/TenantUsersPage";
 import TenantUserCreatePage from "../features/tenantUsers/pages/TenantUserCreatePage";
 import TenantUserEditPage from "../features/tenantUsers/pages/TenantUserEditPage";
+import AnalyticsDashboardPage from "../features/analytics/pages/AnalyticsDashboardPage";
 
 const canShow = (auth, permissions = []) => auth.hasAnyPermission(permissions);
 const canShowPlatformTenants = (auth) =>
   auth.hasRole("PLATFORM_SUPER_ADMIN");
+const canShowReports = (auth) =>
+  auth.hasAnyRole(["BUSINESS_OWNER", "BUSINESS_ADMIN"]) ||
+  auth.hasAnyPermission(["REPORTS_READ"]);
 const canShowTenantUsers = (auth) =>
   auth.hasAnyPermission(["USERS_CREATE", "USERS_UPDATE"]) ||
   auth.hasAnyRole(["BUSINESS_OWNER", "BUSINESS_ADMIN"]);
@@ -34,6 +38,47 @@ const getDefaultPath = (auth) => {
   if (canShowTenantUsers(auth)) return "/settings/users";
   if (canShow(auth, ["SALES_CREATE", "PRODUCTS_READ"])) return "/sales";
   return "/account";
+};
+
+const RouteWrapper = () => {
+  const auth = useAuth();
+
+  const allowed =
+    auth.hasAnyRole(["BUSINESS_OWNER", "BUSINESS_ADMIN"]) ||
+    auth.hasAnyPermission(["REPORTS_READ"]);
+
+  if (!allowed) {
+    const localForbiddenStyle = {
+      minHeight: "calc(100vh - 72px)",
+      display: "grid",
+      placeItems: "center",
+      padding: "32px",
+      background: "#f5f7fb",
+    };
+
+    const localCardStyle = {
+      width: "min(520px, 100%)",
+      borderRadius: "12px",
+      padding: "28px",
+      background: "#ffffff",
+      boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
+      color: "#0f172a",
+    };
+
+    return (
+      <section style={localForbiddenStyle}>
+        <div style={localCardStyle}>
+          <p style={{ margin: "0 0 8px", fontWeight: 800, color: "#b91c1c" }}>403</p>
+          <h1 style={{ margin: "0 0 10px", fontSize: "24px" }}>No tienes permisos para esta accion</h1>
+          <p style={{ margin: 0, color: "#475569", lineHeight: 1.6 }}>
+            Tu usuario no cuenta con los permisos o rol necesario para ver analítica.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return <AnalyticsDashboardPage />;
 };
 
 const Layout = () => {
@@ -72,6 +117,12 @@ const Layout = () => {
           {auth.isAuthenticated && canShow(auth, ["PRODUCTS_READ"]) && (
             <NavLink to="/inventory" style={linkStyle}>
               Inventario
+            </NavLink>
+          )}
+
+          {auth.isAuthenticated && canShowReports(auth) && (
+            <NavLink to="/analytics" style={linkStyle}>
+              Analítica
             </NavLink>
           )}
 
@@ -214,6 +265,15 @@ const Layout = () => {
             element={
               <ProtectedRoute>
                 <AccountSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <RouteWrapper />
               </ProtectedRoute>
             }
           />
