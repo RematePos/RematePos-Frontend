@@ -17,8 +17,24 @@ import BillingCheckoutPage from "../features/billing/pages/BillingCheckoutPage";
 import ReturnsPage from "../features/billing/pages/ReturnsPage";
 import InvoiceCopyPage from "../features/billing/pages/InvoiceCopyPage";
 import ElectronicBillingIntegrationPage from "../features/billing/pages/ElectronicBillingIntegrationPage";
+import TenantListPage from "../features/tenants/pages/TenantListPage";
+import TenantCreatePage from "../features/tenants/pages/TenantCreatePage";
+import TenantUsersPage from "../features/tenantUsers/pages/TenantUsersPage";
+import TenantUserCreatePage from "../features/tenantUsers/pages/TenantUserCreatePage";
+import TenantUserEditPage from "../features/tenantUsers/pages/TenantUserEditPage";
 
 const canShow = (auth, permissions = []) => auth.hasAnyPermission(permissions);
+const canShowPlatformTenants = (auth) =>
+  auth.hasRole("PLATFORM_SUPER_ADMIN");
+const canShowTenantUsers = (auth) =>
+  auth.hasAnyPermission(["USERS_CREATE", "USERS_UPDATE"]) ||
+  auth.hasAnyRole(["BUSINESS_OWNER", "BUSINESS_ADMIN"]);
+const getDefaultPath = (auth) => {
+  if (canShowPlatformTenants(auth)) return "/platform/tenants";
+  if (canShowTenantUsers(auth)) return "/settings/users";
+  if (canShow(auth, ["SALES_CREATE", "PRODUCTS_READ"])) return "/sales";
+  return "/account";
+};
 
 const Layout = () => {
   const auth = useAuth();
@@ -73,6 +89,18 @@ const Layout = () => {
               </NavLink>
             )}
 
+          {auth.isAuthenticated && canShowPlatformTenants(auth) && (
+            <NavLink to="/platform/tenants" style={linkStyle}>
+              Negocios
+            </NavLink>
+          )}
+
+          {auth.isAuthenticated && canShowTenantUsers(auth) && (
+            <NavLink to="/settings/users" style={linkStyle}>
+              Usuarios del negocio
+            </NavLink>
+          )}
+
           {auth.isAuthenticated && (
             <>
               <NavLink to="/account" style={linkStyle}>
@@ -92,7 +120,7 @@ const Layout = () => {
             path="/"
             element={
               auth.isAuthenticated ? (
-                <Navigate to="/sales" replace />
+                <Navigate to={getDefaultPath(auth)} replace />
               ) : (
                 <Navigate to="/login" replace />
               )
@@ -138,6 +166,48 @@ const Layout = () => {
 
           <Route path="/products" element={<Navigate to="/inventory" replace />} />
           <Route path="/products/new" element={<Navigate to="/inventory/new" replace />} />
+
+          <Route
+            path="/platform/tenants"
+            element={
+              <ProtectedRoute requiredRoles={["PLATFORM_SUPER_ADMIN"]}>
+                <TenantListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/platform/tenants/new"
+            element={
+              <ProtectedRoute requiredRoles={["PLATFORM_SUPER_ADMIN"]}>
+                <TenantCreatePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings/users"
+            element={
+              <ProtectedRoute requiredPermissions={["USERS_CREATE", "USERS_UPDATE"]}>
+                <TenantUsersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/users/new"
+            element={
+              <ProtectedRoute requiredPermissions={["USERS_CREATE"]}>
+                <TenantUserCreatePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/users/:userId/edit"
+            element={
+              <ProtectedRoute requiredPermissions={["USERS_UPDATE"]}>
+                <TenantUserEditPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/account"

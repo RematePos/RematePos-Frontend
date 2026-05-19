@@ -3,6 +3,33 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "./LoginPage.css";
 
+const getPostLoginPath = (session, fallback) => {
+  const roles = session?.roles || [];
+  const permissions = session?.permissions || [];
+
+  if (roles.includes("PLATFORM_SUPER_ADMIN")) {
+    return "/platform/tenants";
+  }
+
+  if (
+    permissions.includes("USERS_CREATE") ||
+    permissions.includes("USERS_UPDATE") ||
+    roles.includes("BUSINESS_OWNER") ||
+    roles.includes("BUSINESS_ADMIN")
+  ) {
+    return "/settings/users";
+  }
+
+  if (
+    permissions.includes("SALES_CREATE") ||
+    permissions.includes("PRODUCTS_READ")
+  ) {
+    return fallback || "/sales";
+  }
+
+  return fallback || "/account";
+};
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,9 +54,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (auth.isAuthenticated) {
-      navigate("/sales", { replace: true });
+      const target = getPostLoginPath(
+        {
+          roles: auth.roles,
+          permissions: auth.permissions,
+        },
+        null
+      );
+      navigate(target, { replace: true });
     }
-  }, [auth.isAuthenticated, navigate]);
+  }, [auth.isAuthenticated, auth.permissions, auth.roles, navigate]);
 
   const [form, setForm] = useState({
     username: "",
@@ -50,8 +84,9 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await auth.login(form);
-      const target = location.state?.from?.pathname || "/sales";
+      const session = await auth.login(form);
+      const previousTarget = location.state?.from?.pathname;
+      const target = getPostLoginPath(session, previousTarget);
       navigate(target, { replace: true });
     } catch (err) {
       setError(err.message || "No fue posible iniciar sesion.");
