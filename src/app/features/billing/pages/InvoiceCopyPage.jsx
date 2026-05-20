@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getInvoiceCopy, getRecentInvoices } from "../services/billingService";
+import BillingProviderStatusCard from "../components/BillingProviderStatusCard";
 
 export default function InvoiceCopyPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -229,6 +230,8 @@ export default function InvoiceCopyPage() {
               <p style={styles.noData}>No hay productos para mostrar.</p>
             )}
           </div>
+
+          <BillingProviderStatusCard invoice={invoiceData} />
         </div>
       )}
 
@@ -267,6 +270,12 @@ export default function InvoiceCopyPage() {
                     </span>
                     <span style={styles.recentMeta}>
                       Compra #{invoice.purchaseId} - {formatPrice(invoice.total)}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Proveedor: {invoice.provider || "Sin informacion"}
+                    </span>
+                    <span style={styles.recentMeta}>
+                      Estado: {invoice.providerStatus || "Sin estado"}
                     </span>
                     <span style={styles.recentMeta}>
                       Productos: {Array.isArray(invoice.items) ? invoice.items.length : 0}

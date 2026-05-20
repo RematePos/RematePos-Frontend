@@ -1,5 +1,6 @@
 import React from "react";
 import "./SaleReceipt.css";
+import BillingProviderStatusCard from "../../billing/components/BillingProviderStatusCard";
 
 const SaleReceipt = ({ saleResult, customer, cart, formatPrice }) => {
   if (!saleResult) return null;
@@ -56,6 +57,8 @@ const SaleReceipt = ({ saleResult, customer, cart, formatPrice }) => {
             <span className="label">FACTURA:</span>
             <span className="value">{invoiceNumber}</span>
           </div>
+
+          <BillingProviderStatusCard invoice={invoice || { provider: null }} />
         </div>
 
         {/* Items Section */}
