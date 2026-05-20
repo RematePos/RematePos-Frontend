@@ -76,6 +76,10 @@
   border-bottom: 1px solid #ccc;
 }
 
+.receipt-invoice-section .billing-provider-card {
+  margin-top: 10px;
+}
+
 /* Items Table */
 .receipt-items-section {
   margin-bottom: 12px;

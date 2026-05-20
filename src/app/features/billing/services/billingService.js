@@ -231,6 +231,17 @@ function mapPurchaseToInvoice(purchase) {
     issuedAt: purchase.paidAt || purchase.createdAt,
     paymentStatus: purchase.paymentStatus,
     status: purchase.status,
+    provider: purchase.provider,
+    providerEnvironment: purchase.providerEnvironment,
+    providerStatus: purchase.providerStatus,
+    providerReference: purchase.providerReference,
+    cufe: purchase.cufe,
+    cude: purchase.cude,
+    qrCode: purchase.qrCode,
+    xmlContent: purchase.xmlContent,
+    pdfUrl: purchase.pdfUrl,
+    fiscalValid: purchase.fiscalValid,
+    validationMessage: purchase.validationMessage,
     items: Array.isArray(purchase.items) ? purchase.items : [],
   };
 }
