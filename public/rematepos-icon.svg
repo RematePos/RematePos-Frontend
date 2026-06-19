@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">RematePOS</title>
+  <desc id="desc">RematePOS point of sale icon.</desc>
+  <rect width="512" height="512" rx="112" fill="#0f766e"/>
+  <path d="M96 150c0-30.9 25.1-56 56-56h144c72.9 0 132 59.1 132 132s-59.1 132-132 132H196v60H96V150z" fill="#f8fafc"/>
+  <path d="M196 178v96h92c26.5 0 48-21.5 48-48s-21.5-48-48-48h-92z" fill="#0f766e"/>
+  <path d="M196 322h98l64 96H246l-50-78v78H96v-96h100z" fill="#14b8a6"/>
+</svg>
